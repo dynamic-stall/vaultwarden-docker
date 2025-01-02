@@ -22,8 +22,8 @@ This repository contains scripts and configurations for deploying a self-hosted 
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/vaultwarden-deploy
-cd vaultwarden-deploy
+git clone https://github.com/dynamic-stall/vaultwarden-docker
+cd vaultwarden-docker
 ```
 
 2. Create `.env` file with required variables:
