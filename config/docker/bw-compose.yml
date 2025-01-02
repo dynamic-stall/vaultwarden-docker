@@ -1,0 +1,38 @@
+services:
+  bitwarden:
+    image: vaultwarden/server:latest
+    container_name: ${BW_NAME}
+    hostname: ${BW_NAME}
+    environment:
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - DOMAIN=${BW_DOMAIN}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_PORT=587
+      - SMTP_SECURITY=starttls
+      - SMTP_USERNAME=${SMTP_UN}
+      - SMTP_PASSWORD=${SMTP_PW}
+    ports:
+      - "${BW_PORT}:443"
+    volumes:
+      - /opt/bitwarden:/data
+    networks:
+      bw_net:
+        ipv4_address: ${BW_IP}
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ${CF_NAME}
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${CF_TOKEN}
+    restart: unless-stopped
+    networks:
+      bw_net:
+        ipv4_address: ${CF_IP}
+
+networks:
+  bw_net:
+    external: true
+    name: ${DOCKER_NET}
+
