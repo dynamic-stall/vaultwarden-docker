@@ -112,12 +112,14 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 1. Open Bitwarden desktop app
 
 2. Expand the _"Accessing"_ dropdown menu below your login email
+
 ![image](https://github.com/user-attachments/assets/05dac953-5f70-42ff-a83e-6fd63516d5d3)
 
-3. Select _"Self-hosted"_ and enter your server URL (ex: ```https://your-domain.example.com```)
+4. Select _"Self-hosted"_ and enter your server URL (ex: ```https://your-domain.example.com```)
+
 ![image](https://github.com/user-attachments/assets/e1fdc52d-3eb4-4459-8629-8d010f399406)
 
-4. Continue logging in with the email and password set during configuration (NOT your master password, which is used to access the admin login page at ```https://your-domain.example.com/admin```)
+6. Continue logging in with the email and password set during configuration (NOT your master password, which is used to access the admin login page at ```https://your-domain.example.com/admin```)
 
 #### Using the CLI:
 
