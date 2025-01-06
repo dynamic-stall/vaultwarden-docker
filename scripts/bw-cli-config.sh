@@ -4,6 +4,8 @@
 # Bitwarden CLI Install and Configuration #
 ###########################################
 
+ENV="../.env"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -20,12 +22,14 @@ error() {
     exit 1
 }
 
-# Load environment variables
-if [ -f .env ]; then
-    source .env
-else
-    error ".env file not found"
-fi
+load_env() {
+    if [[ -f $ENV ]]; then
+        source "$ENV"
+        log "Environment variables loaded from $ENV"
+    else
+        error "Environment file ($ENV) not found!"
+    fi
+}
 
 # Check if bw CLI is installed
 check_bw_cli() {
@@ -76,7 +80,7 @@ configure_cli() {
 # Main execution
 main() {
     log "Starting Bitwarden CLI configuration..."
-    
+    load_env
     check_bw_cli
     configure_cli
     

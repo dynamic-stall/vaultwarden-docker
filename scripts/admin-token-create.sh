@@ -3,8 +3,8 @@
 set -e
 
 # Configuration
-ENV_FILE="./.env"
-MIN_PASSWORD_LENGTH=12
+ENV="../.env"
+MIN_PASS_LENGTH=12
 BACKUP_SUFFIX=".bak.$(date +%Y%m%d_%H%M%S)"
 
 # Color codes
@@ -23,12 +23,21 @@ error() {
     exit 1
 }
 
+load_env() {
+    if [[ -f $ENV ]]; then
+        source "$ENV"
+        log "Environment variables loaded from $ENV"
+    else
+        error "Environment file ($ENV) not found!"
+    fi
+}
+
 # Function to validate password strength
 validate_password() {
     local password=$1
     
     # Check length
-    if [ ${#password} -lt $MIN_PASSWORD_LENGTH ]; then
+    if [ ${#password} -lt $MIN_PASS_LENGTH ]; then
         return 1
     fi
     
@@ -54,27 +63,24 @@ install_argon2() {
     log "Checking for Argon2..."
     if ! command -v argon2 &> /dev/null; then
         log "Installing Argon2..."
-        if command -v dnf &> /dev/null; then
-            sudo dnf install -y argon2
-        elif command -v apt-get &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y argon2
-        else
-            error "Package manager not supported. Please install Argon2 manually."
-        fi
+        sudo dnf install -y argon2
+    else
+        error "Package manager not supported. Please install Argon2 manually from: https://www.npmjs.com/package/argon2"
     fi
 }
 
 # Backup existing .env file
 backup_env() {
-    if [ -f "$ENV_FILE" ]; then
+    if [ -f "$ENV" ]; then
         log "Creating backup of existing .env file..."
-        cp "$ENV_FILE" "${ENV_FILE}${BACKUP_SUFFIX}" || \
+        cp "$ENV" "${ENV}${BACKUP_SUFFIX}" || \
             error "Failed to create backup of .env file"
     fi
 }
 
 # Main function
 main() {
+    load_env
     install_argon2
     backup_env
     
@@ -91,7 +97,7 @@ main() {
         fi
         
         if ! validate_password "$PASSWORD"; then
-            echo -e "${YELLOW}Password must be at least $MIN_PASSWORD_LENGTH characters long and contain uppercase, lowercase, numbers, and special characters.${NC}"
+            echo -e "${YELLOW}Password must be at least $MIN_PASS_LENGTH characters long and contain uppercase, lowercase, numbers, and special characters.${NC}"
             continue
         fi
         
@@ -108,13 +114,13 @@ main() {
     
     # Update .env file
     log "Updating .env file..."
-    if [ -f "$ENV_FILE" ]; then
-        sed -i '/^ADMIN_TOKEN=/d' "$ENV_FILE"
+    if [ -f "$ENV" ]; then
+        sed -i '/^ADMIN_TOKEN=/d' "$ENV"
     fi
-    echo "ADMIN_TOKEN=$HASH" >> "$ENV_FILE"
+    echo "ADMIN_TOKEN=$HASH" >> "$ENV"
     
     log "Admin token successfully generated and stored in .env file"
-    echo -e "${YELLOW}Backup created at ${ENV_FILE}${BACKUP_SUFFIX}${NC}"
+    echo -e "${YELLOW}Backup created at ${ENV}${BACKUP_SUFFIX}${NC}"
 }
 
 main "$@"
