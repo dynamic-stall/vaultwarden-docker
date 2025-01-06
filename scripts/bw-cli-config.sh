@@ -55,10 +55,9 @@ check_bw_cli() {
 
 # Configure Bitwarden CLI
 configure_cli() {
-    local domain="${BW_DOMAIN:-vault.example.com}"
-    local base_url="https://$domain"
+    local base_url="https://$BW_DOMAIN"
     
-    log "Configuring Bitwarden CLI for domain: $domain"
+    log "Configuring Bitwarden CLI for domain: $BW_DOMAIN"
     
     # Set base server URL
     bw config server "$base_url"
@@ -82,8 +81,7 @@ main() {
     log "Starting Bitwarden CLI configuration..."
     load_env
     check_bw_cli
-    configure_cli
-    
+    configure_cli    
     log "Configuration completed successfully!"
     echo -e "${YELLOW}You can now login using: bw login${NC}"
 }
