@@ -2,21 +2,22 @@
 
 **BLUF**: This repository contains scripts and configurations for deploying a self-hosted Vaultwarden instance with Cloudflare Tunnel integration, Nginx reverse proxy, and Docker Compose.
 
-[Vaultwarden](https://hub.docker.com/r/vaultwarden/server) is an alternative implementation of the **Bitwarden** server API written in Rust and compatible with [upstream Bitwarden clients⁠](https://bitwarden.com/download/).
+[Vaultwarden](https://hub.docker.com/r/vaultwarden/server) is an alternative implementation of the **Bitwarden** server API, written in Rust, and compatible with [upstream Bitwarden clients⁠](https://bitwarden.com/download/).
 
-If you have a registered domain, you can customize your Bitwarden experience further by changing the server URLs (instructions provided further down).
+If you have a registered domain, you can further customize your Bitwarden experience by modifying the server URLs (instructions provided further down).
 
-Nginx and SSL setup are optional, but recommended. You can still deploy this with just the Cloudflare tunnel encryption, but Cloudflare can still see the source and destinations of your vault setup. This deployment strategy leverages the point-to-point encryption of Cloudflare via Tunnels along with enhance security and privacy by terminating the tunnel at Nginx set up as a reverse proxy.
+**Nginx and SSL setup are optional but highly recommended for enhanced security.** While you can deploy this setup using only Cloudflare Tunnel encryption, Cloudflare will be able to see the source and destination of your Vaultwarden instance. By terminating the tunnel at Nginx, this deployment strategy leverages the point-to-point encryption of Cloudflare Tunnels, while also adding an extra layer of security by ensuring encrypted traffic is further protected through SSL termination at Nginx.
 
-Bitwarden/Vaultwarden is capable of managing both [passwords](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) as well as [secrets](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
+Bitwarden/Vaultwarden is capable of both [password management](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) and [secrets management](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
 
 <br>
 
 ## Prerequisites
 
-- Linux server (_pref._ RHEL/CentOS/Fedora/Rocky; scripts use `dnf` package manager)
+- Linux server (_pref._ RHEL/CentOS/Fedora/Rocky... scripts use `dnf` package manager)
 - [Docker](https://docs.docker.com/engine/install/) installed
-- [Cloudflare account](https://dash.cloudflare.com/sign-up) with a registered domain
+- [Cloudflare account](https://dash.cloudflare.com/sign-up)
+- (Registered domain optional; Cloudflare can assign a subdomain from `cfargotunnel.com` as your endpoint)
 - Basic understanding of networking and Docker concepts
 
 <br>
@@ -102,7 +103,7 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 2. On the login page, click "Settings" in the top right
 
-3. Enter your server URL (ex: ```https://your-domain.example.com```)
+3. Enter your server URL (ex: ```https://vault.example.com```)
 
 4. Click _"Save"_ and proceed with login
 
@@ -114,11 +115,11 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 ![image](https://github.com/user-attachments/assets/05dac953-5f70-42ff-a83e-6fd63516d5d3)
 
-4. Select _"Self-hosted"_ and enter your server URL (ex: ```https://your-domain.example.com```)
+4. Select _"Self-hosted"_ and enter your server URL (ex: ```https://vault.example.com```)
 
 ![image](https://github.com/user-attachments/assets/e1fdc52d-3eb4-4459-8629-8d010f399406)
 
-6. Continue logging in with the email and password set during configuration (NOT your master password, which is used to access the admin login page at ```https://your-domain.example.com/admin```)
+6. Continue logging in with the email and password set during configuration (NOT your master password, which is used to access the admin login page at ```https://vault.example.com/admin```)
 
 #### Using the CLI:
 
@@ -130,15 +131,15 @@ Run the provided configuration script:
 Or manually configure:
 ```bash
 # Set server URL
-bw config server https://your-domain.example.com
+bw config server https://vault.example.com
 
 # Configure individual endpoints
 bw config server \
-  --api https://your-domain.example.com/api \
-  --identity https://your-domain.example.com/identity \
-  --web-vault https://your-domain.example.com \
-  --icons https://your-domain.example.com/icons \
-  --notifications https://your-domain.example.com/notifications
+  --api https://vault.example.com/api \
+  --identity https://vault.example.com/identity \
+  --web-vault https://vault.example.com \
+  --icons https://vault.example.com/icons \
+  --notifications https://vault.example.com/notifications
 ```
 
 #### Using the Secrets Manager SDK (Python):
@@ -153,10 +154,10 @@ from bitwarden_sdk import BitwardenClient, DeviceType, client_settings_from_dict
 client = BitwardenClient(
     client_settings_from_dict(
         {
-            "apiUrl": os.getenv("API_URL", "http://localhost:4000"),
+            "apiUrl": os.getenv("API_URL"),
             "deviceType": DeviceType.SDK,
-            "identityUrl": os.getenv("IDENTITY_URL", "http://localhost:33656"),
-            "userAgent": "Python",
+            "identityUrl": os.getenv("IDENTITY_URL"),
+            "userAgent": "Python"
         }
     )
 )
@@ -166,15 +167,16 @@ logging.basicConfig(level=logging.DEBUG)
 organization_id = os.getenv("ORGANIZATION_ID")
 
 # Set the state file location
-# Note: the path must exist, the file will be created & managed by the sdk
+# Note: the path must exist, the file will be created & managed by the SDK
 state_path = os.getenv("STATE_FILE")
 
 # Attempt to authenticate with the Secrets Manager Access Token
 client.auth().login_access_token(os.getenv("ACCESS_TOKEN"), state_path)
 ```
 
-**NOTE:** It's best to avoid hard-coding secrets into your code -- especially for a secrets manager. This does, however, bring us to a classic chicken-or-egg scenario. If you have experience with this, _vete con Dios_... I'm currently hammering out my personal workflow for this scenario, which is to use an Ansible vault file to encrypt client settings (access token, API URL, etc.) and rely on either (A) a temporarily decrypted vault password file or (B) logging into the Bitwarden CLI and programmatically pulling the vault password via secure note (I know; hilariously roundabout) to decrypt the vault during automated workflows... I'm 100% open to suggestions on this process!
-
+**NOTE**: It's best to avoid hard-coding secrets into your code—especially for a secrets manager. This leads us to a classic chicken-and-egg scenario. If you have experience with this, _vete con Dios_... Currently, I'm working on my personal workflow for this situation. My approach is to use an Ansible vault file to encrypt client settings (such as the access token, API URL, etc.) and rely on one of the following methods for decryption during automated workflows:
+A. A temporarily decrypted vault password file
+B. Logging into the Bitwarden CLI and programmatically pulling the vault password via a secure note (I know; a bit roundabout)
 
 <br>
 
@@ -186,7 +188,8 @@ client.auth().login_access_token(os.getenv("ACCESS_TOKEN"), state_path)
 │   ├── docker/
 │   │   └── bw-compose.yml
 │   └── nginx/
-│       └── bitwarden.conf
+|       ├── bitwarden.conf
+│       └── openssl.cnf
 ├── deploy-vault.sh
 ├── .env.example
 ├── .gitignore
