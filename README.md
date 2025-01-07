@@ -106,13 +106,11 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 #### Using the Web Vault:
 
-1. Log out of your vault if currently logged in
+1. Navigate to the URL of your Vaultwarden instance (i.e., `vault.cfargotunnel.com/login`, `vault.example.com/login`, etc.)
 
-2. On the login page, click "Settings" in the top right
+2. Use the initial admin credentials provided during setup to access the admin page
 
-3. Enter your server URL (ex: ```https://vault.example.com```)
-
-4. Click _"Save"_ and proceed with login
+3. On the admin page, create your primary administrator account with a strong master password
 
 #### Using the Desktop App:
 
@@ -122,11 +120,11 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 ![image](https://github.com/user-attachments/assets/05dac953-5f70-42ff-a83e-6fd63516d5d3)
 
-4. Select _"Self-hosted"_ and enter your server URL (ex: ```https://vault.example.com```)
+3. Select _"Self-hosted"_ and enter your server URL (ex: ```https://vault.example.com```)
 
 ![image](https://github.com/user-attachments/assets/e1fdc52d-3eb4-4459-8629-8d010f399406)
 
-6. Continue logging in with the email and password set during configuration (NOT your master password, which is used to access the admin login page at ```https://vault.example.com/admin```)
+4. Use the initial admin credentials provided during setup
 
 #### Using the CLI:
 
@@ -164,7 +162,7 @@ client = BitwardenClient(
             "apiUrl": os.getenv("API_URL"),
             "deviceType": DeviceType.SDK,
             "identityUrl": os.getenv("IDENTITY_URL"),
-            "userAgent": "Python"
+            "userAgent": "Python",
         }
     )
 )
