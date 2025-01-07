@@ -4,11 +4,13 @@
 
 [Vaultwarden](https://hub.docker.com/r/vaultwarden/server) is an alternative implementation of the **Bitwarden** server API, written in Rust, and compatible with [upstream Bitwarden clients⁠](https://bitwarden.com/download/).
 
+Bitwarden/Vaultwarden is capable of both [password management](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) and [secrets management](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
+
 If you have a registered domain, you can further customize your Bitwarden experience by modifying the server URLs (instructions provided further down).
 
 **Nginx and SSL setup are optional but highly recommended for enhanced security.** While you can deploy this setup using only Cloudflare Tunnel encryption, Cloudflare will be able to see the source and destination of your Vaultwarden instance. By terminating the tunnel at Nginx, this deployment strategy leverages the point-to-point encryption of Cloudflare Tunnels, while also adding an extra layer of security by ensuring encrypted traffic is further protected through SSL termination at Nginx.
 
-Bitwarden/Vaultwarden is capable of both [password management](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) and [secrets management](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
+If you would like to register your SSL certificates with Cloudflare, see [instructions](https://github.com/dynamic-stall/vaultwarden-docker/#Cloudflare-SSL-Registration) further below.
 
 <br>
 
@@ -180,8 +182,21 @@ client.auth().login_access_token(os.getenv("ACCESS_TOKEN"), state_path)
 ```
 
 **NOTE**: It's best to avoid hard-coding secrets into your code—especially for a secrets manager. This leads us to a classic chicken-and-egg scenario. If you have experience with this, _vete con Dios_... Currently, I'm working on my personal workflow for this situation. My approach is to use an Ansible vault file to encrypt client settings (such as the access token, API URL, etc.) and rely on one of the following methods for decryption during automated workflows:
-A. A temporarily decrypted vault password file
-B. Logging into the Bitwarden CLI and programmatically pulling the vault password via a secure note (I know; a bit roundabout)
+
+1. A temporarily decrypted vault password file
+
+2. Logging into the Bitwarden CLI and programmatically pulling the vault password via a secure note (I know; a bit roundabout)
+
+<br>
+
+## Cloudflare Origin CA Certificate
+
+If you would like to register your SSL certificate with Cloudflare and obtain an **Origin CA certificate**, you will first need to generate a certificate signing request (CSR). Use the command below (replace with your private key name, if you brought your own):
+```bash
+openssl req -new -key private.key -out request.csr -config config/nginx/openssl.cnf
+```
+
+After you have your CSR, use it to obtain the Origin CA certificate by following the [official documentation](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/). Once you have registered your SSL certificate with Cloudflare and configured your setup to use them, you can discard the self-signed certificate, `certificate.crt`, **IF** it is no longer being used in your deployment...
 
 <br>
 
