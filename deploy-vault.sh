@@ -41,6 +41,7 @@ check_prerequisites() {
     # Check for .env file
     if [ ! -f .env ]; then
         error ".env file not found. Please create one from .env.example"
+    fi
 }
 
 create_directories() {
