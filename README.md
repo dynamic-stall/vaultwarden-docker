@@ -41,7 +41,7 @@ git clone https://github.com/dynamic-stall/vaultwarden-docker
 cd vaultwarden-docker
 ```
 
-2. Create `.env` file with required variables:
+2. Create `.env` from `example` file (_be sure to add your personalized variables_):
 ```bash
 cp .env.example .env
 ```
@@ -55,6 +55,11 @@ Required environment variables:
 - `CF_IP`: Cloudflare container IP address
 - `DOCKER_NET`: Docker network name
 - `SMTP_*`: Email configuration variables
+
+3. (Optional) If enabling SSL creation, create `openssl.cnf` from `example` file (_be sure to add your personalized variables_):
+```bash
+cp config/openssl.cnf.example config/openssl.cnf
+```
 
 ### 2. Cloudflare Tunnel Setup
 
@@ -188,8 +193,8 @@ B. Logging into the Bitwarden CLI and programmatically pulling the vault passwor
 │   ├── docker/
 │   │   └── bw-compose.yml
 │   └── nginx/
-|       ├── bitwarden.conf
-│       └── openssl.cnf
+|       ├── bitwarden.conf.template
+│       └── openssl.cnf.example
 ├── deploy-vault.sh
 ├── .env.example
 ├── .gitignore
