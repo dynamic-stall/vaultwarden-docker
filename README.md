@@ -4,11 +4,13 @@
 
 [Vaultwarden](https://hub.docker.com/r/vaultwarden/server) is an alternative implementation of the **Bitwarden** server API, written in Rust, and compatible with [upstream Bitwarden clients⁠](https://bitwarden.com/download/).
 
+Bitwarden/Vaultwarden is capable of both [password management](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) and [secrets management](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
+
 If you have a registered domain, you can further customize your Bitwarden experience by modifying the server URLs (instructions provided further down).
 
 **Nginx and SSL setup are optional but highly recommended for enhanced security.** While you can deploy this setup using only Cloudflare Tunnel encryption, Cloudflare will be able to see the source and destination of your Vaultwarden instance. By terminating the tunnel at Nginx, this deployment strategy leverages the point-to-point encryption of Cloudflare Tunnels, while also adding an extra layer of security by ensuring encrypted traffic is further protected through SSL termination at Nginx.
 
-Bitwarden/Vaultwarden is capable of both [password management](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) and [secrets management](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
+If you would like to register your SSL certificates with Cloudflare, see [instructions](#cloudflare-origin-ca-certificate) further below.
 
 <br>
 
@@ -104,13 +106,11 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 #### Using the Web Vault:
 
-1. Log out of your vault if currently logged in
+1. Navigate to the URL of your Vaultwarden instance (i.e., `vault.cfargotunnel.com/login`, `vault.example.com/login`, etc.)
 
-2. On the login page, click "Settings" in the top right
+2. Use the initial admin credentials provided during setup to access the admin page
 
-3. Enter your server URL (ex: ```https://vault.example.com```)
-
-4. Click _"Save"_ and proceed with login
+3. On the admin page, create your primary administrator account with a strong master password
 
 #### Using the Desktop App:
 
@@ -120,11 +120,11 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 ![image](https://github.com/user-attachments/assets/05dac953-5f70-42ff-a83e-6fd63516d5d3)
 
-4. Select _"Self-hosted"_ and enter your server URL (ex: ```https://vault.example.com```)
+3. Select _"Self-hosted"_ and enter your server URL (ex: ```https://vault.example.com```)
 
 ![image](https://github.com/user-attachments/assets/e1fdc52d-3eb4-4459-8629-8d010f399406)
 
-6. Continue logging in with the email and password set during configuration (NOT your master password, which is used to access the admin login page at ```https://vault.example.com/admin```)
+4. Use the initial admin credentials provided during setup
 
 #### Using the CLI:
 
@@ -162,7 +162,7 @@ client = BitwardenClient(
             "apiUrl": os.getenv("API_URL"),
             "deviceType": DeviceType.SDK,
             "identityUrl": os.getenv("IDENTITY_URL"),
-            "userAgent": "Python"
+            "userAgent": "Python",
         }
     )
 )
@@ -180,8 +180,21 @@ client.auth().login_access_token(os.getenv("ACCESS_TOKEN"), state_path)
 ```
 
 **NOTE**: It's best to avoid hard-coding secrets into your code—especially for a secrets manager. This leads us to a classic chicken-and-egg scenario. If you have experience with this, _vete con Dios_... Currently, I'm working on my personal workflow for this situation. My approach is to use an Ansible vault file to encrypt client settings (such as the access token, API URL, etc.) and rely on one of the following methods for decryption during automated workflows:
-A. A temporarily decrypted vault password file
-B. Logging into the Bitwarden CLI and programmatically pulling the vault password via a secure note (I know; a bit roundabout)
+
+1. A temporarily decrypted vault password file
+
+2. Logging into the Bitwarden CLI and programmatically pulling the vault password via a secure note (I know; a bit roundabout)
+
+<br>
+
+## Cloudflare Origin CA Certificate
+
+If you would like to register your SSL certificate with Cloudflare and obtain an **Origin CA certificate**, you will first need to generate a certificate signing request (CSR). Use the command below (replace with your private key name, if you brought your own):
+```bash
+openssl req -new -key private.key -out request.csr -config config/nginx/openssl.cnf
+```
+
+After you have your CSR, use it to obtain the Origin CA certificate by following the [official documentation](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/). Once you have registered your SSL certificate with Cloudflare and configured your setup to use them, you can discard the self-signed certificate, `certificate.crt`, **IF** it is no longer being used in your deployment...
 
 <br>
 
