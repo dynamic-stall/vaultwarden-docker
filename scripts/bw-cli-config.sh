@@ -12,7 +12,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Function to log messages
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
@@ -31,29 +30,37 @@ load_env() {
     fi
 }
 
-# Check if bw CLI is installed
 check_bw_cli() {
+    log "Checking for Bitwarden CLI..."
     if ! command -v bw &> /dev/null; then
-        echo -e "${YELLOW}Bitwarden CLI not found. Would you like to install it? (y/n)${NC}"
+        echo -e "${YELLOW}Would you like to install the Bitwarden CLI? ([y]es/[n]o)${NC}"
         read -r install_choice
-        
-        if [[ $install_choice =~ ^[Yy]$ ]]; then
-            if command -v npm &> /dev/null; then
-                log "Installing Bitwarden CLI via npm..."
-                npm install -g @bitwarden/cli
-            elif command -v snap &> /dev/null; then
-                log "Installing Bitwarden CLI via snap..."
-                sudo snap install bw
+
+        if [[ $install_choice =~ ^(yes|y)$ ]]; then
+            if ! command -v npm &> /dev/null; then
+                log "npm not found. Installing npm..."
+                if command -v dnf &> /dev/null; then
+                    sudo dnf install -y npm || error "Failed to install npm. Please install it manually from: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
+                else
+                    error "Unsupported package manager. Please install npm manually from: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
+                fi
+            fi
+
+            log "Installing Bitwarden CLI via npm..."
+            if npm install -g @bitwarden/cli; then
+                log "Bitwarden CLI successfully installed via npm."
             else
-                error "Neither npm nor snap found. Please install Bitwarden CLI manually from: https://bitwarden.com/help/cli/"
+                error "Failed to install Bitwarden CLI via npm. Please install it manually from: https://bitwarden.com/help/cli"
             fi
         else
-            error "Bitwarden CLI is required for configuration"
+            echo "Bitwarden CLI will not be installed. Exiting..."
+            exit 0
         fi
+    else
+        log "Bitwarden CLI is already installed."
     fi
 }
 
-# Configure Bitwarden CLI
 configure_cli() {
     local base_url="https://$BW_DOMAIN"
     
@@ -76,7 +83,6 @@ configure_cli() {
     bw config server
 }
 
-# Main execution
 main() {
     log "Starting Bitwarden CLI configuration..."
     load_env
