@@ -2,18 +2,15 @@
 
 set -e
 
-# Configuration
 ENV="$(dirname "$(realpath "$0")")/../.env"
 MIN_PASS_LENGTH=12
 BACKUP_SUFFIX=".bak.$(date +%Y%m%d_%H%M%S)"
 
-# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Function to log messages
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
@@ -32,7 +29,6 @@ load_env() {
     fi
 }
 
-# Function to validate password strength
 validate_password() {
     local password=$1
     
@@ -58,18 +54,16 @@ validate_password() {
     return 0
 }
 
-# Check if Argon2 is installed
 install_argon2() {
     log "Checking for Argon2..."
     if ! command -v argon2 &> /dev/null; then
         log "Installing Argon2..."
-        sudo dnf install -y argon2
+        sudo dnf install -y argon2 || error "Failed to install Argon2. Please install it manually."
     else
-        error "Package manager not supported. Please install Argon2 manually from: https://www.npmjs.com/package/argon2"
+        log "Argon2 is already installed."
     fi
 }
 
-# Backup existing .env file
 backup_env() {
     if [ -f "$ENV" ]; then
         log "Creating backup of existing .env file..."
@@ -78,7 +72,6 @@ backup_env() {
     fi
 }
 
-# Main function
 main() {
     load_env
     install_argon2
