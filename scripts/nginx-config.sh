@@ -11,9 +11,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-TMP="../tmp"
+TMP="$(dirname "$(realpath "$0")")/../tmp"
 SSL_DIR="/etc/nginx/ssl"
-ENV="../.env"
+ENV="$(dirname "$(realpath "$0")")/../.env"
 BW_CONF="../config/nginx/bitwarden.conf.template"
 NGX_CONF="/etc/nginx/conf.d/bitwarden.conf"
 

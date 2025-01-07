@@ -4,8 +4,8 @@
 # SSL Certificate Creation #
 ############################
 
-TMP="../tmp"
-ENV="../.env"
+TMP="$(dirname "$(realpath "$0")")/../tmp"
+ENV="$(dirname "$(realpath "$0")")/../.env"
 SSL_CONF="../config/nginx/openssl.cnf"
 
 # Colors for output

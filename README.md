@@ -215,9 +215,9 @@ After you have your CSR, use it to obtain the Origin CA certificate by following
 └── scripts/
     ├── admin-token-create.sh
     ├── bw-cli-config.sh
-    ├── cloudflare-cert-register.sh
+    ├── docker-custom-net.sh
     ├── nginx-config.sh
-    └── ssl-certs-create.sh
+    └── ssl-cert-create.sh
 ```
 
 <br>

@@ -3,7 +3,7 @@
 set -e
 
 # Configuration
-ENV="../.env"
+ENV="$(dirname "$(realpath "$0")")/../.env"
 MIN_PASS_LENGTH=12
 BACKUP_SUFFIX=".bak.$(date +%Y%m%d_%H%M%S)"
 

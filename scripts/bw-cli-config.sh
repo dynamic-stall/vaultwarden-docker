@@ -4,7 +4,7 @@
 # Bitwarden CLI Install and Configuration #
 ###########################################
 
-ENV="../.env"
+ENV="$(dirname "$(realpath "$0")")/../.env"
 
 # Colors for output
 RED='\033[0;31m'

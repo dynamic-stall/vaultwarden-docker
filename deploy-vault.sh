@@ -12,7 +12,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-TMP="./tmp/"
+ENV=".env"
+TMP="tmp"
 
 # Check if running as root
 if [[ $EUID -ne 0 ]]; then
@@ -39,8 +40,8 @@ check_prerequisites() {
     fi
     
     # Check for .env file
-    if [ ! -f .env ]; then
-        error ".env file not found. Please create one from .env.example"
+    if [ ! -f $ENV ]; then
+        error "$ENV file not found. Please create one from $ENV.example"
     fi
 }
 
@@ -99,9 +100,9 @@ configure_nginx() {
 setup_docker_network() {
     log "Setting up Docker network..."
 
-    source .env
+    source "$ENV"
     if [[ -z "${DOCKER_NET}" ]]; then
-        sed -i '/^DOCKER_NET=/d' .env || error "Failed to remove empty DOCKER_NET entry"
+        sed -i '/^DOCKER_NET=/d' $ENV || error "Failed to remove empty DOCKER_NET entry"
         echo -e "${YELLOW}Enter a name for the Docker network (e.g., 'vault-net'):${NC}"
 	read -r vault_net
 
@@ -110,7 +111,7 @@ setup_docker_network() {
         fi
 
         export VAULT_NET="${vault_net}"
-        echo "DOCKER_NET=${VAULT_NET}" >> .env || error "Failed to update .env with DOCKER_NET"
+        echo "DOCKER_NET=${VAULT_NET}" >> $ENV || error "Failed to update .env with DOCKER_NET"
         log "DOCKER_NET set to '${VAULT_NET}' and updated in .env file"
     fi
 
@@ -124,8 +125,8 @@ setup_docker_network() {
 
 deploy_containers() {
     log "Deploying containers..."
-    docker compose -f config/docker/bw-compose.yml pull
-    docker compose -f config/docker/bw-compose.yml up -d || error "Failed to start containers"
+    docker compose -f config/docker/bw-compose.yml --env-file $ENV pull
+    docker compose -f config/docker/bw-compose.yml --env-file $ENV up -d || error "Failed to start containers"
 }
 
 main() {
@@ -143,7 +144,7 @@ main() {
 	setup_docker_network
     fi
     deploy_containers
-    rm -rf $TMP
+    rm -rf $TMP/
     log "Deployment completed successfully!"
     echo -e "${YELLOW}Please check the README for post-installation steps and security considerations${NC}"
 }
