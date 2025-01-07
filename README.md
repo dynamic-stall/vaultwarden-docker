@@ -10,7 +10,7 @@ If you have a registered domain, you can further customize your Bitwarden experi
 
 **Nginx and SSL setup are optional but highly recommended for enhanced security.** While you can deploy this setup using only Cloudflare Tunnel encryption, Cloudflare will be able to see the source and destination of your Vaultwarden instance. By terminating the tunnel at Nginx, this deployment strategy leverages the point-to-point encryption of Cloudflare Tunnels, while also adding an extra layer of security by ensuring encrypted traffic is further protected through SSL termination at Nginx.
 
-If you would like to register your SSL certificates with Cloudflare, see [instructions](https://github.com/dynamic-stall/vaultwarden-docker/#Cloudflare-SSL-Registration) further below.
+If you would like to register your SSL certificates with Cloudflare, see [instructions](#cloudflare-origin-ca-certificate) further below.
 
 <br>
 
