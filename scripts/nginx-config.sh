@@ -14,17 +14,8 @@ NC='\033[0m'
 TMP="../tmp"
 SSL_DIR="/etc/nginx/ssl"
 ENV="../.env"
-BW_CONF="../config/nginx"
-NGX_CONF="/etc/nginx/conf.d"
-CLOUDFLARE_CERTS_URL="https://developers.cloudflare.com/ssl/static/origin_ca_rsa_root.pem"
-
-# Load environment variables
-if [ -f "$ENV" ]; then
-    source "$ENV"
-else
-    echo -e "${RED}Error: "$ENV" file not found${NC}"
-    exit 1
-fi
+BW_CONF="../config/nginx/bitwarden.conf.template"
+NGX_CONF="/etc/nginx/conf.d/bitwarden.conf"
 
 # Function to log messages
 log() {
@@ -34,6 +25,15 @@ log() {
 error() {
     echo -e "${RED}[ERROR] $1${NC}"
     exit 1
+}
+
+load_env() {
+    if [[ -f $ENV ]]; then
+        source "$ENV"
+        log "Environment variables loaded from $ENV"
+    else
+        error "Environment file ($ENV) not found!"
+    fi
 }
 
 install_nginx() {
@@ -58,9 +58,11 @@ configure_nginx() {
     
     sudo mkdir -p $SSL_DIR
     
-    # Copy configuration files and certificates
-    sudo cp $BW_CONF/bitwarden.conf $NGX_CONF/ || error "Failed to copy Nginx configuration"
+    # Copy certificates
     sudo cp $TMP/* $SSL_DIR/ || error "Failed to copy SSL certificates"
+
+    # Generate Nginx configuration file using envsubst
+    envsubst '$PRIVATE_KEY' '$CERTIFICATE' < "${BW_CONF}" | sudo tee "$NGX_CONF" || error "Failed to generate Nginx configuration"
     
     # Test configuration
     sudo nginx -t || error "Nginx configuration test failed"
@@ -73,24 +75,17 @@ verify_ssl_setup() {
     log "Verifying SSL setup..."
     
     # Check if all required files exist
-    local required_files=("private.key" "certificate.crt" "cloudflare.pem")
+    local required_files=("$PRIVATE_KEY" "$CERTIFICATE")
     for file in "${required_files[@]}"; do
         if [ ! -f "$SSL_DIR/$file" ]; then
             echo -e "${YELLOW}Warning: $file not found in $SSL_DIR${NC}"
         fi
     done
-    
-    # Verify certificate chain
-    if [ -f "$SSL_DIR/certificate.crt" ] && [ -f "$SSL_DIR/cloudflare.pem" ]; then
-        if ! openssl verify -CAfile "$SSL_DIR/cloudflare.pem" "$SSL_DIR/certificate.crt" > /dev/null 2>&1; then
-            echo -e "${YELLOW}Warning: SSL certificate chain verification failed${NC}"
-        fi
-    fi
 }
 
 main() {
     log "Starting Nginx configuration..."
-    
+    load_env
     install_nginx
     configure_firewall
     configure_nginx
@@ -99,9 +94,9 @@ main() {
     log "Nginx configuration completed successfully"
     
     if [ "$ENABLE_SSL" = "true" ] && [ -n "$BW_DOMAIN" ]; then
-        echo -e "${YELLOW}Don't forget to:"
+        echo -e "${YELLOW}If registering SSL certs with Cloudflare, don't forget to:"
         echo "1. Submit the CSR to Cloudflare"
-        echo "2. Place the Cloudflare-issued certificate at $SSL_DIR/certificate.crt"
+        echo "2. Place the Cloudflare-issued certificate in the $SSL_DIR directory"
         echo -e "3. Restart Nginx after installing the certificate${NC}"
     fi
 }

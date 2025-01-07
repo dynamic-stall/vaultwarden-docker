@@ -68,22 +68,17 @@ setup_ssl() {
 
         if [[ "$existing_cert" =~ ^(yes|y)$ ]]; then
             echo -e "${YELLOW}Enter the path to your certificate file:${NC}"
-            read -r CERT_FILE
+            read -r cert_file
+	    export CERTIFICATE=cert_file
             echo -e "${YELLOW}Enter the path to your private key file:${NC}"
-            read -r PRIVATE_KEY_FILE
+            read -r pvt_key_file
+	    export PRIVATE_KEY=pvt_key_file
 
-            sudo cp $CERT_FILE $PRIVATE_KEY_FILE $TMP/
+            sudo cp $CERTIFICATE $PRIVATE_KEY $TMP/
         else
-            ./scripts/ssl-certs-create.sh || error "Failed to create certificates"
-        fi
-
-        echo -e "${YELLOW}Do you want to register your certificates with Cloudflare? ([y]es/[n]o)${NC}"
-        read -r register_cloudflare
-
-        if [[ "$register_cloudflare" =~ ^(yes|y)$ ]]; then
-            ./scripts/cloudflare-cert-register.sh || error "Failed to register certificates with Cloudflare"
-        else
-            log "Skipping Cloudflare registration. Proceeding to Nginx configuration."
+            ./scripts/ssl-cert-create.sh || error "Failed to create certificates"
+	    export CERTIFICATE="/etc/nginx/ssl/certificate.crt"
+	    export PRIVATE_KEY="/etc/nginx/ssl/private.key"
         fi
     else
         export ENABLE_SSL=false
@@ -102,9 +97,27 @@ configure_nginx() {
 
 setup_docker_network() {
     log "Setting up Docker network..."
+
     source .env
-    if ! docker network inspect ${DOCKER_NET} > /dev/null 2>&1; then
-        docker network create --subnet=172.20.0.0/16 ${DOCKER_NET} || error "Failed to create Docker network"
+    if [[ -z "${DOCKER_NET}" ]]; then
+        sed -i '/^DOCKER_NET=/d' .env || error "Failed to remove empty DOCKER_NET entry"
+        echo -e "${YELLOW}Enter a name for the Docker network (e.g., 'vault-net'):${NC}"
+	read -r vault_net
+
+        if [[ -z "${vault_net}" ]]; then
+            error "Docker network name cannot be empty"
+        fi
+
+        export VAULT_NET="${vault_net}"
+        echo "DOCKER_NET=${VAULT_NET}" >> .env || error "Failed to update .env with DOCKER_NET"
+        log "DOCKER_NET set to '${VAULT_NET}' and updated in .env file"
+    fi
+
+    if ! docker network inspect "${DOCKER_NET}" > /dev/null 2>&1; then
+        ./scripts/docker-custom-net.sh || error "Failed to create Docker network."
+        log "Docker network '${DOCKER_NET}' created successfully"
+    else
+        log "Docker network '${DOCKER_NET}' already exists. No action required."
     fi
 }
 
@@ -120,10 +133,14 @@ main() {
     create_directories
     generate_admin_token
     setup_ssl
-    if [[ "$ENABLE_SSL" == "true" ]]; then
-        configure_nginx
+    configure_nginx
+    echo -e "${YELLOW}Are you using an existing Docker network? ([y]es/[n]o):${NC}"
+    read -r use_existing_network
+    if [[ "$use_existing_network" =~ ^(yes|y)$ ]]; then
+	log "Using an existing Docker network. Ensure that the .env file is configured correctly."
+    else
+	setup_docker_network
     fi
-    setup_docker_network
     deploy_containers
     rm -rf $TMP
     log "Deployment completed successfully!"

@@ -28,8 +28,8 @@ server {
     server_name vault.example.com;
 
     # SSL certificates
-    ssl_certificate /etc/nginx/ssl/certificate.crt;
-    ssl_certificate_key /etc/nginx/ssl/private.key;
+    ssl_certificate ${CERTIFICATE};
+    ssl_certificate_key ${PRIVATE_KEY};
     ssl_trusted_certificate /etc/nginx/ssl/cloudflare.pem;
 
     # Verify chain of trust of OCSP response
