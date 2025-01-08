@@ -76,8 +76,36 @@ main() {
     load_env
     install_argon2
     backup_env
-    
-    # Get password with verification
+
+    if grep -q '^ADMIN_TOKEN' "$ENV"; then
+        current_value=$(grep '^ADMIN_TOKEN' "$ENV" | awk -F= '{print $2}' | xargs)
+
+        if [ -z "$current_value" ]; then
+            log "Existing 'ADMIN_TOKEN' entry found with no value. Deleting the line."
+            sed -i '/^ADMIN_TOKEN/d' "$ENV"
+        else
+            while true; do
+                echo -e "${YELLOW}An existing 'ADMIN_TOKEN' entry is present in the .env file:${NC}"
+                echo -e "${CYAN}Current value: ${current_value}${NC}"
+		read -p "Do you want to overwrite this value? ([y]es/[n]o): " choice
+                case "$choice" in
+                    y|yes)
+                        log "Overwriting the existing 'ADMIN_TOKEN'."
+                        sed -i '/^ADMIN_TOKEN/d' "$ENV"
+                        break
+                        ;;
+                    n|no)
+                        log "Skipping admin token creation process."
+                        exit 0
+                        ;;
+                    *)
+                        echo -e "${RED}Invalid input. Please enter 'y'|'yes' or 'n'|'no'.${NC}"
+                        ;;
+                esac
+            done
+        fi
+    fi
+
     while true; do
         read -s -p "Enter Vaultwarden admin token password: " PASSWORD
         echo
@@ -97,15 +125,12 @@ main() {
         break
     done
     
-    # Generate cryptographically secure salt
     log "Generating secure salt..."
     SALT=$(dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64)
     
-    # Generate hash with Argon2id
     log "Generating password hash..."
-    HASH=$(echo -n "$PASSWORD" | argon2 "$SALT" -id -t 3 -m 15 -p 4 -l 32 | grep 'Hash:' | cut -d' ' -f2)
+    HASH=$(echo -n "$PASSWORD" | argon2 "$SALT" -id -t 3 -m 15 -p 4 -l 32 | awk '/Hash:/ {print $2}')
     
-    # Update .env file
     log "Updating .env file..."
     if [ -f "$ENV" ]; then
         sed -i '/^ADMIN_TOKEN=/d' "$ENV"
