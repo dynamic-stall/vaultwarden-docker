@@ -6,7 +6,7 @@
 
 TMP="$(dirname "$(realpath "$0")")/../tmp"
 ENV="$(dirname "$(realpath "$0")")/../.env"
-SSL_CONF="../config/nginx/openssl.cnf"
+SSL_CONF="$(dirname "$(realpath "$0")")/../config/nginx/openssl.cnf"
 
 # Colors for output
 RED='\033[0;31m'
@@ -32,16 +32,33 @@ load_env() {
 }
 
 create_self_signed_cert() {
-    if [[ -f "$SSL_CONF" ]]; then
-    log "Using OpenSSL configuration file: $SSL_CONF"
-    else
-        error "OpenSSL configuration file ($SSL_CONF) not found! Please create one using the openssl.cnf.example file found in the config directory."
-    fi
+    while [[ ! -f "$SSL_CONF" ]]; do
+        error "OpenSSL configuration file ($SSL_CONF) not found!"
 
+        echo -e "${YELLOW}Please create or update the OpenSSL configuration file at the specified path.${NC}"
+        echo -e "${YELLOW}You can duplicate your terminal session, make the necessary changes, and come back here.${NC}"
+        echo -e "${YELLOW}Press 'r' to retry or 'q' to quit.${NC}"
+        read -r choice
+
+        case $choice in
+            [Rr])
+                log "Retrying..."
+                ;;
+            [Qq])
+                error "Exiting script. Please configure the OpenSSL file and rerun the script."
+                exit 1
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Please enter 'r' to retry or 'q' to quit.${NC}"
+                ;;
+        esac
+    done
+
+    log "Using OpenSSL configuration file: $SSL_CONF"
     openssl req -x509 -nodes -days 730 -newkey rsa:4096 \
         -keyout "$TMP/private.key" \
         -out "$TMP/certificate.crt" \
-        -config "$SSL_CONF"
+        -config "$SSL_CONF" || error "Failed to create self-signed certificate"
     log "Self-signed certificate created at $TMP"
 }
 
