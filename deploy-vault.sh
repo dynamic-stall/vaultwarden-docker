@@ -14,11 +14,6 @@ NC='\033[0m'
 ENV=".env"
 TMP="tmp"
 
-if [[ $EUID -ne 0 ]]; then
-   echo -e "${RED}This script must be run as root${NC}"
-   exit 1
-fi
-
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
@@ -30,25 +25,61 @@ error() {
 
 check_prerequisites() {
     log "Checking prerequisites..."
-    
-    # Check for Docker
-    if ! command -v docker &> /dev/null; then
-        error "Docker is not installed. Please install Docker first."
-    fi
-    
+	
     # Check for .env file
     if [ ! -f $ENV ]; then
         error "$ENV file not found. Please create one from $ENV.example"
     fi
+
+    # Check if Docker is installed
+    if ! command -v docker &> /dev/null; then
+        error "Docker is not installed. Please install Docker first."
+    fi
+
+    # Check if docker group exists
+    if ! getent group docker > /dev/null; then
+        log "Creating docker group..."
+        sudo groupadd docker
+    else
+        log "Docker group already exists."
+    fi
+
+    # Check if $USER is in docker group
+    if groups $USER | grep -q "\bdocker\b"; then
+        log "$USER is already in the docker group."
+    else
+        log "Adding $USER to the docker group..."
+        sudo usermod -aG docker $USER
+	newgrp docker
+    fi
+
+    # Check if /usr/bin/docker has correct group ownership
+    current_group=$(stat -c '%G' /usr/bin/docker)
+    if [ "$current_group" != "docker" ]; then
+        log "Changing group ownership of /usr/bin/docker to docker..."
+        sudo chown root:docker /usr/bin/docker
+    else
+        log "Group ownership of /usr/bin/docker is already set to docker."
+    fi
+
+    # Check if permissions on /usr/bin/docker are correct
+    current_permissions=$(stat -c '%A' /usr/bin/docker)
+    if [ "$current_permissions" != "rwxr-x---" ]; then
+        log "Setting correct permissions for /usr/bin/docker..."
+        sudo chmod 750 /usr/bin/docker
+    else
+        log "Permissions on /usr/bin/docker are already correct."
+    fi
 }
 
-create_directories() {
-    log "Creating necessary directories..."
-    
-    mkdir -p /opt/bitwarden
-    
-    # Set proper permissions
-    chmod 750 /opt/bitwarden
+set_volume_directory() {
+    if [ ! -d /opt/bitwarden ]; then    
+    	log "Creating necessary directories..."
+	sudo mkdir -p /opt/bitwarden
+    fi
+    # Set permissions
+    sudo chown -R root:docker /opt/bitwarden
+    sudo chmod 750 /opt/bitwarden
 }
 
 generate_admin_token() {
@@ -67,10 +98,10 @@ setup_ssl() {
 	    export EXISTING_CERT=true
             echo -e "${YELLOW}Enter the path to your certificate file:${NC}"
             read -r cert_file
-	    export CERTIFICATE=cert_file
+	    export CERTIFICATE="$cert_file"
             echo -e "${YELLOW}Enter the path to your private key file:${NC}"
             read -r pvt_key_file
-	    export PRIVATE_KEY=pvt_key_file
+	    export PRIVATE_KEY="$pvt_key_file"
         else
 	    export EXISTING_CERT=false
 	    mkdir $TMP
@@ -126,7 +157,7 @@ deploy_containers() {
 main() {
     log "Starting Vaultwarden deployment..."
     check_prerequisites
-    create_directories
+    set_volume_directory
     generate_admin_token
     setup_ssl
     configure_nginx
@@ -140,6 +171,7 @@ main() {
     deploy_containers
     rm -rf $TMP/
     log "Deployment completed successfully!"
+    ./scripts/bw-cli-config.sh || echo "Bitwarden CLI could not be configured..."
     echo -e "${YELLOW}Please check the README for post-installation steps and security considerations${NC}"
 }
 
