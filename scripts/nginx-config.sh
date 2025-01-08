@@ -64,18 +64,37 @@ configure_nginx() {
     
     # Copy certificates
     if [[ "$EXISTING_CERT" == "true" ]]; then
-	ln -s $PRIVATE_KEY $SSL_DIR/private.key || error "Failed to create symlink to private key file"
-	ln -s $CERTIFICATE $SSL_DIR/certificate.crt || error "Failed to create symlink to SSL certificate"
+        sudo ln -s $CERTIFICATE $SSL_DIR/certificate.crt || error "Failed to create symlink to SSL certificate"
+	sudo ln -s $PRIVATE_KEY $SSL_DIR/private.key || error "Failed to create symlink to private key file"
     else
         sudo cp $TMP/* $SSL_DIR/ || error "Failed to copy SSL certificates"
     fi
 
     # Generate Nginx configuration file using envsubst
     envsubst "$DOMAIN" < "${BW_CONF}" | sudo tee "$NGX_CONF" || error "Failed to generate Nginx configuration"
-    
+
+    # Check if the 'nginx' group exists
+    if ! getent group nginx &> /dev/null; then
+        echo "Nginx group does not exist. Creating nginx group..."
+        sudo groupadd nginx
+    fi
+
+    # Ensure the current user is added to the nginx group
+    if ! groups $USER | grep -q "\bnginx\b"; then
+        echo "Adding $USER to the nginx group..."
+        sudo usermod -aG nginx $USER
+    fi
+
+    # Ensure proper permissions/ownership for nginx binaries
+    sudo chown -R root:nginx /etc/nginx
+    sudo chmod 750 /etc/nginx
+    sudo chmod 750 /etc/nginx/ssl
+    sudo chmod 640 /etc/nginx/ssl/private.key
+    sudo chmod 644 /etc/nginx/ssl/certificate.crt
+
     # Test configuration
     sudo nginx -t || error "Nginx configuration test failed"
-    
+
     # Restart Nginx
     sudo systemctl restart nginx || error "Failed to restart Nginx"
 }
