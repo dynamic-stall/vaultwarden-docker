@@ -14,10 +14,10 @@ NC='\033[0m'
 TMP="$(dirname "$(realpath "$0")")/../tmp"
 SSL_DIR="/etc/nginx/ssl"
 ENV="$(dirname "$(realpath "$0")")/../.env"
-BW_CONF="../config/nginx/bitwarden.conf.template"
+BW_CONF="$(dirname "$(realpath "$0")")/../config/nginx/bitwarden.conf.template"
 NGX_CONF="/etc/nginx/conf.d/bitwarden.conf"
+DOMAIN="$(grep -oP '^BW_DOMAIN=\K.*' $ENV)"
 
-# Function to log messages
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
@@ -37,11 +37,15 @@ load_env() {
 }
 
 install_nginx() {
-    log "Installing Nginx and dependencies..."
-    
+    log "Checking for Nginx..."
+
     if ! command -v nginx &> /dev/null; then
+        log "Nginx not found. Installing Nginx and dependencies..."
         sudo dnf install epel-release -y || error "Failed to install EPEL"
         sudo dnf install nginx -y || error "Failed to install Nginx"
+        log "Nginx installation completed successfully."
+    else
+        log "Nginx is already installed. Skipping installation..."
     fi
 }
 
@@ -59,10 +63,15 @@ configure_nginx() {
     sudo mkdir -p $SSL_DIR
     
     # Copy certificates
-    sudo cp $TMP/* $SSL_DIR/ || error "Failed to copy SSL certificates"
+    if [[ "$EXISTING_CERT" == "true" ]]; then
+	ln -s $PRIVATE_KEY $SSL_DIR/private.key || error "Failed to create symlink to private key file"
+	ln -s $CERTIFICATE $SSL_DIR/certificate.crt || error "Failed to create symlink to SSL certificate"
+    else
+        sudo cp $TMP/* $SSL_DIR/ || error "Failed to copy SSL certificates"
+    fi
 
     # Generate Nginx configuration file using envsubst
-    envsubst '$PRIVATE_KEY' '$CERTIFICATE' < "${BW_CONF}" | sudo tee "$NGX_CONF" || error "Failed to generate Nginx configuration"
+    envsubst "$DOMAIN" < "${BW_CONF}" | sudo tee "$NGX_CONF" || error "Failed to generate Nginx configuration"
     
     # Test configuration
     sudo nginx -t || error "Nginx configuration test failed"
@@ -75,7 +84,7 @@ verify_ssl_setup() {
     log "Verifying SSL setup..."
     
     # Check if all required files exist
-    local required_files=("$PRIVATE_KEY" "$CERTIFICATE")
+    local required_files=("$SSL_DIR/private.key" "$SSL_DIR/certificate.crt")
     for file in "${required_files[@]}"; do
         if [ ! -f "$SSL_DIR/$file" ]; then
             echo -e "${YELLOW}Warning: $file not found in $SSL_DIR${NC}"
