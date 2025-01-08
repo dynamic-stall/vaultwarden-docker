@@ -6,7 +6,6 @@
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -15,13 +14,11 @@ NC='\033[0m'
 ENV=".env"
 TMP="tmp"
 
-# Check if running as root
 if [[ $EUID -ne 0 ]]; then
    echo -e "${RED}This script must be run as root${NC}"
    exit 1
 fi
 
-# Function to log messages
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
@@ -64,23 +61,20 @@ setup_ssl() {
     read -r enable_ssl
     if [[ "$enable_ssl" =~ ^(yes|y)$ ]]; then
         export ENABLE_SSL=true
-        mkdir $TMP
         echo -e "${YELLOW}Do you have existing SSL certificates? ([y]es/[n]o)${NC}"
         read -r existing_cert
-
         if [[ "$existing_cert" =~ ^(yes|y)$ ]]; then
+	    export EXISTING_CERT=true
             echo -e "${YELLOW}Enter the path to your certificate file:${NC}"
             read -r cert_file
 	    export CERTIFICATE=cert_file
             echo -e "${YELLOW}Enter the path to your private key file:${NC}"
             read -r pvt_key_file
 	    export PRIVATE_KEY=pvt_key_file
-
-            sudo cp $CERTIFICATE $PRIVATE_KEY $TMP/
         else
+	    export EXISTING_CERT=false
+	    mkdir $TMP
             ./scripts/ssl-cert-create.sh || error "Failed to create certificates"
-	    export CERTIFICATE="/etc/nginx/ssl/certificate.crt"
-	    export PRIVATE_KEY="/etc/nginx/ssl/private.key"
         fi
     else
         export ENABLE_SSL=false
