@@ -9,6 +9,7 @@ BACKUP_SUFFIX=".bak.$(date +%Y%m%d_%H%M%S)"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 log() {
@@ -31,12 +32,12 @@ load_env() {
 
 validate_password() {
     local password=$1
-    
+
     # Check length
     if [ ${#password} -lt $MIN_PASS_LENGTH ]; then
         return 1
     fi
-    
+
     # Check for uppercase, lowercase, numbers, and special characters
     if ! echo "$password" | grep -q "[A-Z]"; then
         return 1
@@ -50,7 +51,7 @@ validate_password() {
     if ! echo "$password" | grep -q "[!@#$%^&*()_+]"; then
         return 1
     fi
-    
+
     return 0
 }
 
@@ -77,21 +78,17 @@ main() {
     install_argon2
     backup_env
 
-    if grep -q '^ADMIN_TOKEN' "$ENV"; then
-        current_value=$(grep '^ADMIN_TOKEN' "$ENV" | awk -F= '{print $2}' | xargs)
+    if grep -q '^ADMIN_TOKEN=' "$ENV"; then
+        current_value=$(grep '^ADMIN_TOKEN=' "$ENV" | awk -F= '{print $2}' | xargs)
 
-        if [ -z "$current_value" ]; then
-            log "Existing 'ADMIN_TOKEN' entry found with no value. Deleting the line."
-            sed -i '/^ADMIN_TOKEN/d' "$ENV"
-        else
+        if [[ -n "$current_value" ]]; then
             while true; do
                 echo -e "${YELLOW}An existing 'ADMIN_TOKEN' entry is present in the .env file:${NC}"
                 echo -e "${CYAN}Current value: ${current_value}${NC}"
-		read -p "Do you want to overwrite this value? ([y]es/[n]o): " choice
+                read -p "Do you want to overwrite this value? ([y]es/[n]o): " choice
                 case "$choice" in
                     y|yes)
                         log "Overwriting the existing 'ADMIN_TOKEN'."
-                        sed -i '/^ADMIN_TOKEN/d' "$ENV"
                         break
                         ;;
                     n|no)
@@ -111,34 +108,39 @@ main() {
         echo
         read -s -p "Confirm password: " PASSWORD2
         echo
-        
+
         if [ "$PASSWORD" != "$PASSWORD2" ]; then
             echo -e "${YELLOW}Passwords don't match. Please try again.${NC}"
             continue
         fi
-        
+
         if ! validate_password "$PASSWORD"; then
             echo -e "${YELLOW}Password must be at least $MIN_PASS_LENGTH characters long and contain uppercase, lowercase, numbers, and special characters.${NC}"
             continue
         fi
-        
+
         break
     done
-    
+
     log "Generating secure salt..."
     SALT=$(dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64)
-    
+
     log "Generating password hash..."
     HASH=$(echo -n "$PASSWORD" | argon2 "$SALT" -id -t 3 -m 15 -p 4 -l 32 | awk '/Hash:/ {print $2}')
     
+    # Escape special characters in the hash
+    ESC_HASH=$(printf '%s' "$HASH" | sed 's/["\\]/\\&/g')
+
     log "Updating .env file..."
-    if [ -f "$ENV" ]; then
-        sed -i '/^ADMIN_TOKEN=/d' "$ENV"
+    if grep -q '^ADMIN_TOKEN=' "$ENV"; then
+        sed -i "s|^ADMIN_TOKEN=.*|ADMIN_TOKEN=\"$ESC_HASH\"|" "$ENV"
+    else
+        echo "ADMIN_TOKEN=\"$ESC_HASH\"" >> "$ENV"
     fi
-    echo "ADMIN_TOKEN=$HASH" >> "$ENV"
-    
+
     log "Admin token successfully generated and stored in .env file"
     echo -e "${YELLOW}Backup created at ${ENV}${BACKUP_SUFFIX}${NC}"
 }
 
 main "$@"
+

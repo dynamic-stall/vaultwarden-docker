@@ -98,10 +98,10 @@ setup_ssl() {
 	    export EXISTING_CERT=true
             echo -e "${YELLOW}Enter the path to your certificate file:${NC}"
             read -r cert_file
-	    export CERTIFICATE="$cert_file"
+	    export CERTIFICATE="${cert_file}"
             echo -e "${YELLOW}Enter the path to your private key file:${NC}"
             read -r pvt_key_file
-	    export PRIVATE_KEY="$pvt_key_file"
+	    export PRIVATE_KEY="${pvt_key_file}"
         else
 	    export EXISTING_CERT=false
 	    mkdir $TMP
@@ -164,15 +164,15 @@ main() {
     echo -e "${YELLOW}Are you using an existing Docker network? ([y]es/[n]o):${NC}"
     read -r use_existing_network
     if [[ "$use_existing_network" =~ ^(yes|y)$ ]]; then
-	log "Using an existing Docker network. Ensure that the .env file is configured correctly."
+	    log "Using an existing Docker network. Ensure that the .env file is configured correctly."
     else
-	setup_docker_network
+	    setup_docker_network
     fi
     deploy_containers
     rm -rf $TMP/
     log "Deployment completed successfully!"
     ./scripts/bw-cli-config.sh || echo "Bitwarden CLI could not be configured..."
-    echo -e "${YELLOW}Please check the README for post-installation steps and security considerations${NC}"
+    echo -e "${YELLOW}Please check the README.md file for post-installation steps and security considerations${NC}"
 }
 
 main "$@"

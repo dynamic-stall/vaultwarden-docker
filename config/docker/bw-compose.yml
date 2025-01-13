@@ -1,11 +1,11 @@
 services:
   bitwarden:
     image: vaultwarden/server:latest
-    container_name: ${BW_NAME}
-    hostname: ${BW_NAME}
+    container_name: ${VAULT_NAME}
+    hostname: ${VAULT_NAME}
     environment:
       - ADMIN_TOKEN=${ADMIN_TOKEN}
-      - DOMAIN=${BW_DOMAIN}
+      - DOMAIN=${VAULT_DOMAIN}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_FROM=${SMTP_FROM}
       - SMTP_PORT=587
@@ -13,26 +13,44 @@ services:
       - SMTP_USERNAME=${SMTP_UN}
       - SMTP_PASSWORD=${SMTP_PW}
     ports:
-      - "${BW_PORT}:443"
+      - "${VAULT_PORT}:443"
     volumes:
-      - /opt/bitwarden:/data
+      - "${VAULT_VOLUME}:/data"
     networks:
       bw_net:
-        ipv4_address: ${BW_IP}
+        ipv4_address: 10.111.0.2
+    restart: unless-stopped
+
+  duckdns:
+    image: linuxserver/duckdns:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${DDNS_TZ}
+      - SUBDOMAINS=${DDNS_DOMAIN}
+      - TOKEN=${DDNS_TOKEN}
+    networks:
+      vault_net:
+        ipv4_address: 10.111.0.3
+    restart: unless-stopped
 
   cloudflared:
     image: cloudflare/cloudflared:latest
-    container_name: ${CF_NAME}
+    container_name: ${TUNNEL_NAME}
     command: tunnel run
     environment:
-      TUNNEL_TOKEN: ${CF_TOKEN}
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
     restart: unless-stopped
     networks:
-      bw_net:
-        ipv4_address: ${CF_IP}
+      vault_net:
+        ipv4_address: 10.111.0.4
 
 networks:
-  bw_net:
-    external: true
-    name: ${DOCKER_NET}
+  vault_net:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: "10.111.0.0/28"
+          gateway: 10.111.0.1
 

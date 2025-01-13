@@ -10,16 +10,15 @@
 ## (choose an IP range that isn't too restrictive and won't cause IP conflicts with other network devices. I recommend using a chunk from the latter half of your IP pool; i.e., x.x.x.192/26)
 
 ## If deviating from any of the pre-defined values, you'll need to modify the .env file next:
-## Change the 'BW_IP' (../.env==line 5) and 'CF_IP' (../.env==line 13) variables to match your newly defined IP range.
+## Change the 'BW_IP' and 'CF_IP' variables to match your newly defined IP range.
 
 # Variables:
-SUBNET="172.31.20."
+SUBNET="10.111.0."
 
 NETWORK_NAME="$VAULT_NET"
-CIDR="${SUBNET}0/28"
+CIDR="${SUBNET}0/27"
 GATEWAY="${SUBNET}1"
 DRIVER="bridge"
-#IP_RANGE="${SUBNET}0/27"
 
 docker network create \
 --driver="$DRIVER" \
