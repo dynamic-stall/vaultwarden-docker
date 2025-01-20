@@ -31,19 +31,6 @@ services:
         ipv4_address: 10.111.0.2
     restart: unless-stopped
 
-  duckdns:
-    image: linuxserver/duckdns:latest
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${DDNS_TZ}
-      - SUBDOMAINS=${DDNS_DOMAIN}
-      - TOKEN=${DDNS_TOKEN}
-    networks:
-      vault_net:
-        ipv4_address: 10.111.0.3
-    restart: unless-stopped
-
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: ${TUNNEL_NAME}
@@ -53,7 +40,41 @@ services:
     restart: unless-stopped
     networks:
       vault_net:
+        ipv4_address: 10.111.0.3
+
+  duckdns:
+    profiles:
+      - extras
+    image: linuxserver/duckdns:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${DDNS_TZ}
+      - SUBDOMAINS=${DDNS_DOMAIN}
+      - TOKEN=${DDNS_TOKEN}
+    networks:
+      vault_net:
         ipv4_address: 10.111.0.4
+    restart: unless-stopped
+
+  cli:
+    profiles:
+      - extras
+    image: bitwarden-cli:latest
+    build:
+      context: .
+      dockerfile: cli.Dockerfile
+      args:
+        DOMAIN: ${DOMAIN_URL}
+    environment:
+      DOMAIN: ${DOMAIN_URL}
+    depends_on:
+      - bitwarden
+    volumes:
+      - ${VAULT_VOLUME}:/data # Use the same volume as bitwarden
+    networks:
+      vault_net:
+        ipv4_address: 10.111.0.5
 
 networks:
   vault_net:

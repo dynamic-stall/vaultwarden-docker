@@ -4,27 +4,42 @@
 # Bitwarden CLI Install and Configuration #
 ###########################################
 
-ENV="$(dirname "$(realpath "$0")")/../.env"
-
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"
+BLUE="\033[34m"
+PURPLE="\033[0;35m"
+CYAN="\033[1;36m"
 ORANGE="\033[38;5;202m"
+BOLD="\033[1m"
 NC="\033[0m"
 
+ENV="$(dirname "$(realpath "$0")")/../.env"
+CONFIG="$(dirname "$(realpath "$0")")/../config/docker"
+
 log() {
-    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+    sleep 1s
+}
+
+prompt() {
+    echo -e "${YELLOW}$1${NC}"
+    sleep 1.25s
+}
+
+success() {
+    echo -e "${CYAN}[SUCCESS] $1${NC}"
+    sleep 2s
 }
 
 error() {
     echo -e "${RED}[ERROR] $1${NC}"
-    return 1
+    exit 1
 }
 
 warning() {
     echo -e "${ORANGE}[WARNING] $1${NC}"
-    echo "Please check official CLI documentation: https://bitwarden.com/help/cli"
-    return 1
+    sleep 1.5s
 }
 
 load_env() {
@@ -36,66 +51,46 @@ load_env() {
     fi
 }
 
-check_bw_cli() {
-    log "Checking for Bitwarden CLI..."
-    if ! command -v bw &> /dev/null; then
-        echo -e "${YELLOW}Would you like to install the Bitwarden CLI? ([y]es/[n]o)${NC}"
-        read -r install_choice
-
-        if [[ $install_choice =~ ^(yes|y)$ ]]; then
-            if ! command -v npm &> /dev/null; then
-                log "npm not found. Installing npm..."
-                if command -v dnf &> /dev/null; then
-                    sudo dnf install -y npm || warning "Failed to install npm. Install it manually from: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
-                else
-                    warning "Unsupported package manager. Install npm manually from: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
-                fi
-            fi
-
-            log "Installing Bitwarden CLI via npm..."
-            if npm install -g @bitwarden/cli; then
-                log "Bitwarden CLI successfully installed via npm."
-            else
-                warning "Failed to install Bitwarden CLI via npm."
-            fi
-        else
-            echo "Bitwarden CLI will not be installed. Exiting..."
-            return 0
-        fi
+build_cli_image() {
+    log "Building Bitwarden CLI Docker image..."
+    if docker compose -f "$CONFIG/bw-compose.yml" --env-file "$ENV" build cli; then
+        success "Bitwarden CLI image build complete."
     else
-        log "Bitwarden CLI is already installed."
+        error "Failed to build Bitwarden CLI image."
     fi
-}
-
-configure_cli() {
-    local base_url="https://$BW_DOMAIN"
-
-    log "Configuring Bitwarden CLI for domain: $BW_DOMAIN"
-
-    # Set base server URL
-    bw config server "$base_url" || warning "Unable to configure Bitwarden CLI."
-    
-    # Configure individual endpoints
-    bw config server \
-        --api "$base_url/api" \
-        --identity "$base_url/identity" \
-        --web-vault "$base_url" \
-        --icons "$base_url/icons" \
-        --notifications "$base_url/notifications" \
-        --events "$base_url/events" || warning "Unable to configure Bitwarden CLI."
-
-    # Verify configuration
-    log "Current Bitwarden CLI configuration:"
-    bw config server
 }
 
 main() {
     log "Starting Bitwarden CLI configuration..."
     load_env
-    check_bw_cli
-    configure_cli
-    log "Configuration completed successfully!"
-    echo -e "${YELLOW}You can now login using: '${NC}bw login${YELLOW}'${NC}"
+
+    while true; do
+        prompt "This script can configure the Bitwarden CLI from a custom Dockerfile, rather than host installation."
+        prompt "Would you like to build the Bitwarden CLI Docker image? ([y]es/[n]o)"
+        read -r build_choice
+
+        case "${build_choice,,}" in
+            y|yes)
+                build_cli_image
+                echo -e "${YELLOW}You can now run CLI commands with:${NC}\n"
+                echo -e "${PURPLE}docker compose -f $CONFIG/bw-compose.yml run --rm --profile extras cli bw${NC}"
+                sleep 1.25s
+                echo -e "${YELLOW}\nTIP: Create a 'bw' alias pointing to 'bw-compose.yml' to quickly access the CLI, i.e.,${NC}\n"
+                echo -e "${BLUE}alias ${CYAN}bw${NC}=${ORANGE}'docker compose -f $HOME/vaultwarden-docker/config/docker/bw-compose.yml run --rm --profile extras cli bw'${NC}\n"
+                sleep 1.25s
+                return 0
+                ;;
+            n|no)
+                log "Bitwarden CLI image will not be built."
+                prompt "If you prefer, you can install the CLI on your host following instructions at: https://bitwarden.com/help/cli"
+                echo "Skipping Bitwarden CLI configuration..."
+                exit 0
+                ;;
+            *)
+                warning "Invalid input. Please enter 'y', 'yes'; or 'n', 'no'."
+                ;;
+        esac
+    done
 }
 
 main "$@"
