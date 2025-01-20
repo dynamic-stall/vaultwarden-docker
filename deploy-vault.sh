@@ -45,11 +45,11 @@ check_prerequisites() {
     fi
 
     # Check if $USER is in docker group
-    if groups $USER | grep -q "\bdocker\b"; then
+    if groups "$USER" | grep -q "\bdocker\b"; then
         log "$USER is already in the docker group."
     else
         log "Adding $USER to the docker group..."
-        sudo usermod -aG docker $USER
+        sudo usermod -aG docker "$USER"
 	newgrp docker
     fi
 
@@ -169,7 +169,7 @@ main() {
 	    setup_docker_network
     fi
     deploy_containers
-    rm -rf $TMP/
+    rm -rf $TMP
     log "Deployment completed successfully!"
     ./scripts/bw-cli-config.sh || echo "Bitwarden CLI could not be configured..."
     echo -e "${YELLOW}Please check the README.md file for post-installation steps and security considerations${NC}"
