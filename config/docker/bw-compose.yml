@@ -4,14 +4,24 @@ services:
     container_name: ${VAULT_NAME}
     hostname: ${VAULT_NAME}
     environment:
-      - ADMIN_TOKEN=${ADMIN_TOKEN}
-      - DOMAIN=${VAULT_DOMAIN}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_FROM=${SMTP_FROM}
-      - SMTP_PORT=587
-      - SMTP_SECURITY=starttls
-      - SMTP_USERNAME=${SMTP_UN}
-      - SMTP_PASSWORD=${SMTP_PW}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      DOMAIN: DOMAIN_URL}
+      ROCKET_PORT: 80 # Internal port for Vaultwarden. Required even with port mapping.
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_USERNAME: ${SMTP_UN}
+      SMTP_PASSWORD: ${SMTP_PW}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_FROM_NAME: ${SMTP_NAME}
+      SMTP_PORT: 587
+      SMTP_SECURITY: starttls
+      SIGNUPS_ALLOWED: false
+      SIGNUPS_VERIFY: true # Enable email verification for new signups
+      WEB_VAULT_ENABLED: true # Enable the integrated web vault
+      WEBAUTHN_ENABLED: true # Enable WebAuthn (for security keys etc.)
+      INVITATIONS_ALLOWED: false  # Allow sending organization invitations
+      BACKUP_ENABLED: true
+      BACKUP_DIR: /data/backups  # Path inside the container
+      BACKUP_RETENTION_DAYS: 30
     ports:
       - "${VAULT_PORT}:443"
     volumes:
