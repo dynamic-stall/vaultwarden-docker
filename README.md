@@ -128,17 +128,9 @@ This will:
 
 <br>
 
-## Configuring Clients
+## Accessing Your Vault
 
-### Installing Bitwarden CLI
-
-Instructions for installing the Bitwarden CLI based on your OS/environment can be found [here](https://bitwarden.com/help/cli/).
-
-### Installing the Secrets Manager SDK
-
-Instructions for installing the Bitwarden Secrets Manager SDK based on your language of choice can be found [here](https://bitwarden.com/help/secrets-manager-sdk/).
-
-### Configuring Server URLs
+### Configuring Clients
 
 #### Using the Web Vault:
 
@@ -162,14 +154,17 @@ Instructions for installing the Bitwarden Secrets Manager SDK based on your lang
 
 4. Use the initial admin credentials provided during setup
 
+<br>
+
+### Programmatic Access
+
 #### Using the CLI:
 
-Run the provided configuration script:
-```bash
-./scripts/configure-bw-cli.sh
-```
+The main deployment scripts will (optionally) build a _Docker container_ which will allow you to run the Bitwarden CLI -- while also pre-configuring it to use your custom domain.
 
-Or manually configure:
+If you would prefer a _host installation_ of the CLI, please review the [official documentation](https://bitwarden.com/help/cli) on how to do so based on your OS.
+
+Reference the below for manual configuration of the CLI:
 ```bash
 # Set server URL
 bw config server https://vault.example.com
@@ -183,7 +178,11 @@ bw config server \
   --notifications https://vault.example.com/notifications
 ```
 
-#### Using the Secrets Manager SDK (Python):
+#### Using the Secrets Manager SDK:
+
+Instructions for installing the Bitwarden Secrets Manager SDK based on your language of choice can be found [here](https://bitwarden.com/help/secrets-manager-sdk/).
+
+Reference the below for configuring the SDK via _Python_:
 ```python
 import logging
 import os
@@ -225,7 +224,7 @@ client.auth().login_access_token(os.getenv("ACCESS_TOKEN"), state_path)
 
 ## Cloudflare Origin CA Certificate
 
-If you would like to register your SSL certificate with Cloudflare and obtain an **Origin CA certificate**, you will first need to generate a certificate signing request (CSR). Use the command below (replace with your private key name, if you brought your own):
+If you would like to register your SSL certificate with Cloudflare (or another certificate authority) and obtain an **Origin CA certificate**, you will first need to generate a certificate signing request (CSR). Use the command below (replace with your private key name, if you brought your own):
 ```bash
 openssl req -new -key private.key -out request.csr -config config/nginx/openssl.cnf
 ```
