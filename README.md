@@ -240,11 +240,13 @@ After you have your CSR, use it to obtain the Origin CA certificate by following
 .
 ├── config/
 │   ├── docker/
-│   │   └── bw-compose.yml
+│   │   ├── bw-compose.yml
+|   |   └── cli.Dockerfile
 │   └── nginx/
 |       ├── bitwarden.conf.template
 │       └── openssl.cnf.example
-├── deploy-vault.sh
+├── deploy-nginx.sh
+├── deploy-standalone.sh
 ├── .env.example
 ├── .gitignore
 ├── README.md  # this file
