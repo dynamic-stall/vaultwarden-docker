@@ -4,26 +4,12 @@
 
 ## Path: /etc/nginx/conf.d/bitwarden.conf
 
-## Rate limiting zones
-limit_req_zone $binary_remote_addr zone=vaultwarden_ratelimit:10m rate=10r/s;
-
-## SSL configuration
-ssl_session_timeout 1d;
-ssl_session_cache shared:SSL:50m;
-ssl_session_tickets off;
-
-## Modern configuration
-ssl_protocols TLSv1.3;
-ssl_prefer_server_ciphers off;
-
-## HSTS (uncomment if you're using HTTPS)
-add_header Strict-Transport-Security "max-age=63072000" always;
-
-## OCSP Stapling
-ssl_stapling on;
-ssl_stapling_verify on;
-resolver 1.1.1.1 1.0.0.1 valid=300s;
-resolver_timeout 5s;
+## HTTP redirect to HTTPS
+server {
+    listen 80;
+    server_name ${DOMAIN};
+    return 301 https://$server_name$request_uri;
+}
 
 server {
     listen 443 ssl http2;
@@ -41,15 +27,26 @@ server {
     ## To include the certificate chain (intermediate CA), uncomment the line below:
     #ssl_trusted_certificate /etc/nginx/ssl/origin_ca_rsa_root.pem;
 
-    ## Alternatively, if you have a full certificate chain file that includes 
-    ## both your certificate and the intermediate CA(s), use the line below:
-    #ssl_trusted_certificate /etc/nginx/ssl/fullchain.pem;
+    ## NOTE: If you are using a fullchain.pem that already includes the certificate
+    ## and intermediate CA(s), you do NOT need the ssl_trusted_certificate directive.
 
-    ## NOTE: If you are using a fullchain.pem that already includes the 
-    ## certificate and intermediate CA(s), you do NOT need the ssl_trusted_certificate 
-    ## directive.
+    # SSL Ciphers and Protocols
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers HIGH:!aNULL:!MD5;
 
-    ## Security headers
+    # HSTS
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+
+    # OCSP Stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    # DNS
+    resolver 1.1.1.1 1.0.0.1 valid=300s;
+    resolver_timeout 5s;
+
+    # Security Headers
     add_header X-Frame-Options DENY;
     add_header X-Content-Type-Options nosniff;
     add_header X-XSS-Protection "1; mode=block";
@@ -57,53 +54,46 @@ server {
     add_header Referrer-Policy "same-origin";
     add_header X-Permitted-Cross-Domain-Policies "none";
 
-    ## Rate limiting
-    limit_req zone=vaultwarden_ratelimit burst=20 nodelay;
+    # Rate Limiting
+    limit_req_zone $binary_remote_addr zone=vaultwarden_ratelimit:10m rate=10r/s;
 
-    ## Proxy settings
     location / {
-        proxy_pass http://127.0.0.1:8443;
+        proxy_pass http://localhost:8443;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        ## WebSocket support
+        # WebSocket Support
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
 
-        ## Timeouts
+        # Timeouts
         proxy_read_timeout 90;
         proxy_connect_timeout 90;
         proxy_send_timeout 90;
+        proxy_buffering off;
     }
 
-    ## Notifications websocket
+    # Notifications Websocket
     location /notifications/hub {
-        proxy_pass http://127.0.0.1:8443;
+        proxy_pass http://localhost:8443;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
     }
 
-    ## Disable logs for favicon
+    # Disable logs for favicon
     location = /favicon.ico {
         log_not_found off;
         access_log off;
     }
 
-    ## Enable gzip compression
+    # Enable Gzip Compression
     gzip on;
     gzip_vary on;
     gzip_min_length 1000;
     gzip_proxied expired no-cache no-store private auth;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
     gzip_disable "MSIE [1-6]\.";
-}
-
-## HTTP redirect to HTTPS
-server {
-    listen 80;
-    server_name ${DOMAIN};
-    return 301 https://$server_name$request_uri;
 }
