@@ -73,13 +73,13 @@ check_prerequisites() {
 }
 
 set_volume_directory() {
-    if [ ! -d /opt/bitwarden ]; then    
+    if [ ! -d /opt/vaultwarden ]; then    
     	log "Creating necessary directories..."
-	sudo mkdir -p /opt/bitwarden
+	sudo mkdir -p /opt/vaultwarden /opt/vaultwarden/backups /opt/vaultwarden/logs &> /dev/null
     fi
     # Set permissions
-    sudo chown -R root:docker /opt/bitwarden
-    sudo chmod 750 /opt/bitwarden
+    sudo chown -R root:docker /opt/vaultwarden
+    sudo chmod 750 /opt/vaultwarden
 }
 
 generate_admin_token() {
@@ -150,8 +150,8 @@ setup_docker_network() {
 
 deploy_containers() {
     log "Deploying containers..."
-    docker compose -f config/docker/bw-compose.yml --env-file $ENV pull
-    docker compose -f config/docker/bw-compose.yml --env-file $ENV up -d || error "Failed to start containers"
+    docker compose -f config/docker/vw-compose.yml --env-file $ENV pull
+    docker compose -f config/docker/vw-compose.yml --env-file $ENV up -d || error "Failed to start containers"
 }
 
 main() {

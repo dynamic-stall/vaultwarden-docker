@@ -101,16 +101,16 @@ check_prerequisites() {
 }
 
 set_volume_directory() {
-    if [ ! -d /opt/bitwarden ]; then    
+    if [ ! -d /opt/vaultwarden ]; then    
     	log "Creating necessary directories..."
         # Back-ups directory
-	    sudo mkdir -p /opt/bitwarden/backups &> /dev/null
+	    sudo mkdir -p /opt/vaultwarden /opt/vaultwarden/backups /opt/vaultwarden/logs &> /dev/null
         # Favicon directory (see: config/docker/favicon.ico)
-        sudo mkdir -p /opt/bitwarden/web-vault/static &> /dev/null
+        #sudo mkdir -p /opt/vaultwarden/web-vault/static &> /dev/null
     fi
     # Set permissions
-    sudo chown -R root:docker /opt/bitwarden
-    sudo chmod -R 750 /opt/bitwarden
+    sudo chown -R root:docker /opt/vaultwarden
+    sudo chmod -R 750 /opt/vaultwarden
 }
 
 generate_admin_token() {
@@ -120,8 +120,8 @@ generate_admin_token() {
 
 deploy_containers() {
     log "Deploying containers..."
-    docker compose -f config/docker/bw-compose.yml --env-file $ENV pull || error "Failed to update Docker image."
-    docker compose -f config/docker/bw-compose.yml --env-file $ENV up -d || error "Failed to start containers."
+    docker compose -f config/docker/vw-compose.yml --env-file $ENV pull || error "Failed to update Docker image."
+    docker compose -f config/docker/vw-compose.yml --env-file $ENV up -d || error "Failed to start containers."
 }
 
 main() {
@@ -131,7 +131,7 @@ main() {
     generate_admin_token
     deploy_containers
     success "Vault deployment completed!"
-    ./scripts/bw-cli-config.sh
+    ./scripts/bw-cli-config.sh || echo "Bitwarden CLI could not be configured..."
     prompt "Please check the README for post-installation steps and security considerations."
 }
 
