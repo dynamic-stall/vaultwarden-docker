@@ -113,9 +113,11 @@ The DuckDNS container will automatically:
 
 No additional maintenance is required as long as the container remains running.
 
+<br>
+
 #### Option 2: Using Your Own Domain
 
-If you have a registered domain, you can skip the DuckDNS setup and modify the `bw-compose.yml` file:
+If you have a registered domain, you can skip the DuckDNS setup and modify the `vw-compose.yml` file:
 
 1. Remove the DuckDNS service block:
   ```yaml
@@ -271,10 +273,10 @@ After you have your CSR, use it to obtain the Origin CA certificate by following
 .
 ├── config/
 │   ├── docker/
-│   │   ├── bw-compose.yml
-|   |   └── cli.Dockerfile
+│   │   ├── cli.Dockerfile
+|   |   └── vw-compose.yml
 │   └── nginx/
-|       ├── bitwarden.conf.template
+|       ├── vaultwarden.conf.template
 │       └── openssl.cnf.example
 ├── deploy-nginx.sh
 ├── deploy-standalone.sh
@@ -284,6 +286,7 @@ After you have your CSR, use it to obtain the Origin CA certificate by following
 └── scripts/
     ├── admin-token-create.sh
     ├── bw-cli-config.sh
+    ├── cli-config-host.sh
     ├── docker-custom-net.sh
     ├── nginx-config.sh
     └── ssl-cert-create.sh
