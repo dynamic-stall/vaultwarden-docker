@@ -20,7 +20,7 @@ services:
       WEBAUTHN_ENABLED: true # Enable WebAuthn (for security keys etc.)
       INVITATIONS_ALLOWED: false  # Allow sending organization invitations
       BACKUP_ENABLED: true
-      BACKUP_DIR: /data/backups  # Path inside the container
+      BACKUP_DIR: /backups  # Path inside the container
       BACKUP_RETENTION_DAYS: 30
     ports:
       - "${VAULT_PORT}:443"
@@ -50,20 +50,22 @@ services:
     init: true
     environment:
       BACKUP_DIR: /backups/
+      BACKUP_DIR_PERMISSIONS: 740  # 700 minimum required
       LOG_DIR: /logs/
-      # EVERY DAY @ 5am
-      CRON_TIME: 0 5 * * *
+      LOG_DIR_PERMISSIONS: 640
+      VW_DATABASE_URL: /data/db.sqlite3
+      CRON_TIME: 0 5 * * *  # EVERY DAY @ 5am
       DELETE_AFTER: 7
       TIMESTAMP: true
-      UID: 1001 # enter user that has docker permission (default: root)
-      GID: 991 # enter group ID for docker (default: root)
+      UID: 0 # enter user that has docker permission (default: root)
+      GID: 0 # enter group ID for docker (default: root)
       BACKUP_ADD_DATABASE: true
       BACKUP_ADD_ATTACHMENTS: true
       BACKUP_ADD_CONFIG_JSON: true
       BACKUP_ADD_ICON_CACHE: true
       BACKUP_ADD_RSA_KEY: true
       LOG_LEVEL: info
-      #- TZ= <your timezome>
+      TZ: ${TIMEZONE}
     depends_on:
       - vaultwarden
     volumes:
@@ -76,16 +78,14 @@ services:
     restart: unless-stopped
 
   duckdns:
-    profiles:
-      - extras
     image: linuxserver/duckdns:latest
     container_name: "${VAULT_NAME}-dns"
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${DDNS_TZ}
-      - SUBDOMAINS=${DDNS_DOMAIN}
-      - TOKEN=${DDNS_TOKEN}
+      PUID: 1000
+      PGID: 1000
+      TZ: ${TIMEZONE}
+      SUBDOMAINS: ${DDNS_DOMAIN}
+      TOKEN: ${DDNS_TOKEN}
     networks:
       vault_net:
         ipv4_address: 10.111.0.5
