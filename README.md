@@ -96,10 +96,13 @@ _(**NOTE II:** If skipping Nginx and SSL configuration, simply run the `deploy-s
 #### Option 1: Using DuckDNS (Free Domain)
 
 1. Visit [DuckDNS](https://www.duckdns.org/) and sign in using your preferred OAuth provider
+
 ![image](https://github.com/user-attachments/assets/581f6db4-0e73-45e5-9e38-91747637223c)
 
 2. Create a subdomain (e.g., _vault.duckdns.org_)
+
 3. Copy your token from the DuckDNS dashboard
+
 ![image](https://github.com/user-attachments/assets/3953e37b-be5f-49cd-9ce0-ca62063bcef7)
 
 4. Add these variables to your `.env` file:
