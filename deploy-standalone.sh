@@ -88,10 +88,10 @@ check_prerequisites() {
 
     # Check if jq, ipcalc is installed
     for pkg in "jq" "ipcalc"; do
-        if ! command -v "$pkg" &> /dev/null; then  # Quote $pkg
+        if ! command -v "$pkg" &> /dev/null; then
             echo -e "${ORANGE}'$pkg' is required for Docker network validation. Installing...${NC}"
             sleep 1.25s
-            if sudo dnf install -y "$pkg" &> /dev/null; then  # Quote $pkg
+            if sudo dnf install -y "$pkg" &> /dev/null; then
                 success "'$pkg' installed successfully."
             else
                 error "'$pkg' could not be installed. Please install manually."
