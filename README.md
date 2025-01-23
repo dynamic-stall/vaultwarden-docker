@@ -118,19 +118,17 @@ No additional maintenance is required as long as the container remains running.
 If you have a registered domain, you can skip the DuckDNS setup and modify the `bw-compose.yml` file:
 
 1. Remove the DuckDNS service block:
-   ```yaml
-   # Remove this entire block
-   duckdns:
-     image: linuxserver/duckdns
-     # ...
-   ```
+  ```yaml
+  # Remove this entire block
+  duckdns:
+    image: linuxserver/duckdns
+    # ...
+  ```
 
-2. Update the Vaultwarden environment variables:
-   ```yaml
-   vaultwarden:
-     environment:
-       DOMAIN_NAME: https://vaultwarden.yourdomain.com  # Replace with your domain
-   ```
+2. Update the `DDNS_DOMAIN` variable in `.env`:
+  ```bash
+  DDNS_DOMAIN="<your-duckdns-subdomain>"  # Replace with your domain
+  ```
 
 ### 4. Deployment
 
