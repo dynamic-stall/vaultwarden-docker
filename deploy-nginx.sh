@@ -16,11 +16,22 @@ TMP="tmp"
 
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+    sleep 1s
+}
+
+prompt() {
+    echo -e "${YELLOW}$1${NC}"
+    sleep 1.25s
+}
+
+success() {
+    echo -e "${CYAN}[SUCCESS] $1${NC}"
+    sleep 2s
 }
 
 error() {
     echo -e "${RED}[ERROR] $1${NC}"
-    exit 1
+    exit 2
 }
 
 check_prerequisites() {
@@ -122,32 +133,6 @@ configure_nginx() {
     fi
 }
 
-setup_docker_network() {
-    log "Setting up Docker network..."
-
-    source "$ENV"
-    if [[ -z "${DOCKER_NET}" ]]; then
-        sed -i '/^DOCKER_NET=/d' $ENV || error "Failed to remove empty DOCKER_NET entry"
-        echo -e "${YELLOW}Enter a name for the Docker network (e.g., 'vault-net'):${NC}"
-	read -r vault_net
-
-        if [[ -z "${vault_net}" ]]; then
-            error "Docker network name cannot be empty"
-        fi
-
-        export VAULT_NET="${vault_net}"
-        echo "DOCKER_NET=${VAULT_NET}" >> $ENV || error "Failed to update .env with DOCKER_NET"
-        log "DOCKER_NET set to '${VAULT_NET}' and updated in .env file"
-    fi
-
-    if ! docker network inspect "${DOCKER_NET}" > /dev/null 2>&1; then
-        ./scripts/docker-custom-net.sh || error "Failed to create Docker network."
-        log "Docker network '${DOCKER_NET}' created successfully"
-    else
-        log "Docker network '${DOCKER_NET}' already exists. No action required."
-    fi
-}
-
 deploy_containers() {
     log "Deploying containers..."
     docker compose -f config/docker/vw-compose.yml --env-file $ENV pull
@@ -161,18 +146,11 @@ main() {
     generate_admin_token
     setup_ssl
     configure_nginx
-    echo -e "${YELLOW}Are you using an existing Docker network? ([y]es/[n]o):${NC}"
-    read -r use_existing_network
-    if [[ "$use_existing_network" =~ ^(yes|y)$ ]]; then
-	    log "Using an existing Docker network. Ensure that the .env file is configured correctly."
-    else
-	    setup_docker_network
-    fi
     deploy_containers
     rm -rf $TMP
-    log "Deployment completed successfully!"
+    success "Deployment completed successfully!"
     ./scripts/bw-cli-config.sh || echo "Bitwarden CLI could not be configured..."
-    echo -e "${YELLOW}Please check the README.md file for post-installation steps and security considerations${NC}"
+    prompt "Please check the README.md file for post-installation steps and security considerations."
 }
 
 main "$@"

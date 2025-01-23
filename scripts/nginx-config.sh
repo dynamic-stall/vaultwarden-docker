@@ -14,9 +14,9 @@ NC='\033[0m'
 TMP="$(dirname "$(realpath "$0")")/../tmp"
 SSL_DIR="/etc/nginx/ssl"
 ENV="$(dirname "$(realpath "$0")")/../.env"
-BW_CONF="$(dirname "$(realpath "$0")")/../config/nginx/bitwarden.conf.template"
-NGX_CONF="/etc/nginx/conf.d/bitwarden.conf"
-DOMAIN="$(grep -oP '^BW_DOMAIN=\K.*' $ENV)"
+VW_CONF="$(dirname "$(realpath "$0")")/../config/nginx/vaultwarden.conf.template"
+NGX_CONF="/etc/nginx/conf.d/vaultwarden.conf"
+DOMAIN="$(grep -oP '^VAULT_NAME=\K.*' $ENV).$(grep -oP '^DOMAIN_NAME=\K.*' $ENV)"
 
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
@@ -71,7 +71,7 @@ configure_nginx() {
     fi
 
     # Generate Nginx configuration file using envsubst
-    envsubst "$DOMAIN" < "${BW_CONF}" | sudo tee "$NGX_CONF" || error "Failed to generate Nginx configuration"
+    envsubst "$DOMAIN" < "${VW_CONF}" | sudo tee "$NGX_CONF" || error "Failed to generate Nginx configuration"
 
     # Check if the 'nginx' group exists
     if ! getent group nginx &> /dev/null; then
@@ -121,7 +121,7 @@ main() {
     
     log "Nginx configuration completed successfully"
     
-    if [ "$ENABLE_SSL" = "true" ] && [ -n "$BW_DOMAIN" ]; then
+    if [ "$ENABLE_SSL" = "true" ] && [ -n "$DOMAIN" ]; then
         echo -e "${YELLOW}If registering SSL certs with Cloudflare, don't forget to:"
         echo "1. Submit the CSR to Cloudflare"
         echo "2. Place the Cloudflare-issued certificate in the $SSL_DIR directory"
