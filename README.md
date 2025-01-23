@@ -336,8 +336,8 @@ docker compose up -d
 
 1. Check container logs:
 ```bash
-docker logs k-room
-docker logs tk-room
+docker logs <vault_container_name>
+docker logs <tunnel_container_name>
 ```
 
 2. Verify Nginx configuration:
@@ -347,7 +347,7 @@ nginx -t
 
 3. Check Cloudflare tunnel status:
 ```bash
-docker logs tk-room
+docker logs <tunnel_container_name>
 ```
 
 <br>
