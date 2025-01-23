@@ -305,7 +305,7 @@ After you have your CSR, use it to obtain the Origin CA certificate by following
 
 - Always use strong passwords
 - Keep your system updated
-- Regularly backup the `/opt/bitwarden` directory
+- Regularly backup the `/opt/bitwarden` directory (automated by default)
 - Monitor logs for suspicious activity
 - Use 2FA where possible
 
@@ -315,9 +315,11 @@ After you have your CSR, use it to obtain the Origin CA certificate by following
 
 ### Backup
 
-Backup the `/opt/bitwarden` directory regularly:
+Back-ups are AUTOMATED via the `vw_backup` container as part of the `vw-compose.yml` file. Default is set to daily at 5 AM.
+
+For manual back-ups, you can back up the `/opt/vaultwarden` directory:
 ```bash
-tar -czf backup.tar.gz /opt/bitwarden
+tar -czf backup.tar.gz /opt/vaultwarden
 ```
 
 ### Updates
