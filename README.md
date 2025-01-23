@@ -132,16 +132,29 @@ If you have a registered domain, you can skip the DuckDNS setup and modify the `
 
 ### 4. Deployment
 
-Run the main deployment script:
+Run one of the main deployment scripts:
+
+If configuring SSL and Nginx, run:
 ```bash
-./deploy-vault.sh
+./deploy-nginx.sh
 ```
 
 This will:
 1. Generate admin token
-2. Optionally, create SSL certificates
-4. Optionally, configure Nginx
-6. Launch Docker containers
+2. Create SSL certificates
+3. Configure Nginx
+4. Launch Docker containers
+5. (Optionally,) configure Bitwarden CLI
+
+If deploying without nginx, run:
+```bash
+./deploy-standalone.sh
+```
+
+This will:
+1. Generate admin token
+2. Launch Docker containers
+3. (Optionally,) configure Bitwarden CLI
 
 <br>
 
