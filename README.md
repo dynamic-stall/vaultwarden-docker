@@ -146,6 +146,8 @@ This will:
 4. Launch Docker containers
 5. (Optionally,) configure Bitwarden CLI
 
+<br>
+
 If deploying without nginx, run:
 ```bash
 ./deploy-standalone.sh
