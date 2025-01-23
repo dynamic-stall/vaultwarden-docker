@@ -179,7 +179,7 @@ This will:
 
 The main deployment scripts will (optionally) build a _Docker container_ which will allow you to run the Bitwarden CLI -- while also pre-configuring it to use your custom domain.
 
-If you would prefer a _host installation_ of the CLI, please review the [official documentation](https://bitwarden.com/help/cli) on how to do so based on your OS.
+**NOTE:** If you would prefer a _host installation_ of the CLI, you can use the `scripts/cli-host-config.sh` script instead of the Docker deployment.
 
 Reference the below for manual configuration of the CLI:
 ```bash
