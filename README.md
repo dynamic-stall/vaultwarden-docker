@@ -1,6 +1,6 @@
 # Vaultwarden Deployment with Cloudflare Tunnel
 
-**BLUF**: This repository contains scripts and configurations for deploying a self-hosted Vaultwarden instance with Cloudflare Tunnel integration and DuckDNS custom subdomain via Docker Compose.
+**BLUF**: This repository contains scripts and configurations for deploying a self-hosted Vaultwarden instance with Cloudflare Tunnel integration and (optional) DuckDNS custom subdomain via Docker Compose.
 
 [Vaultwarden](https://hub.docker.com/r/vaultwarden/server) is an alternative implementation of the **Bitwarden** server API, written in Rust, and compatible with [upstream Bitwarden clients⁠](https://bitwarden.com/download/).
 
