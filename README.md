@@ -4,7 +4,7 @@
 
 [Vaultwarden](https://hub.docker.com/r/vaultwarden/server) is an alternative implementation of the **Bitwarden** server API, written in Rust, and compatible with [upstream Bitwarden clients⁠](https://bitwarden.com/download/).
 
-Bitwarden/Vaultwarden is capable of both [password management](https://bitwarden.com/help/password-manager-overview/) (via web app, desktop app, browser extension, mobile app, or CLI) and [secrets management](https://bitwarden.com/help/secrets-manager-overview/) (via web app, CLI, or SDK).
+Bitwarden/Vaultwarden is capable of [password management](https://bitwarden.com/help/password-manager-overview/) via web app, desktop app, browser extension, mobile app, or CLI.
 
 [DuckDNS](https://hub.docker.com/r/linuxserver/duckdns) is a free dynamic DNS service. It allows users to create custom domain names that automatically update to point to a specific IP address, which is particularly useful for home servers, remote access, or hosting services with changing IP addresses. Users can choose a subdomain under duckdns.org and configure it to always point to their current IP address, making it easier to access their network or servers remotely.
 
@@ -218,48 +218,6 @@ bw config server \
   --icons https://vault.example.com/icons \
   --notifications https://vault.example.com/notifications
 ```
-
-#### Using the Secrets Manager SDK:
-
-Instructions for installing the Bitwarden Secrets Manager SDK based on your language of choice can be found [here](https://bitwarden.com/help/secrets-manager-sdk/).
-
-Reference the below for configuring the SDK via _Python_:
-```python
-import logging
-import os
-from datetime import datetime, timezone
-
-from bitwarden_sdk import BitwardenClient, DeviceType, client_settings_from_dict
-
-# Create the BitwardenClient, which is used to interact with the SDK
-client = BitwardenClient(
-    client_settings_from_dict(
-        {
-            "apiUrl": os.getenv("API_URL"),
-            "deviceType": DeviceType.SDK,
-            "identityUrl": os.getenv("IDENTITY_URL"),
-            "userAgent": "Python",
-        }
-    )
-)
-
-# Add some logging & set the org id
-logging.basicConfig(level=logging.DEBUG)
-organization_id = os.getenv("ORGANIZATION_ID")
-
-# Set the state file location
-# Note: the path must exist, the file will be created & managed by the SDK
-state_path = os.getenv("STATE_FILE")
-
-# Attempt to authenticate with the Secrets Manager Access Token
-client.auth().login_access_token(os.getenv("ACCESS_TOKEN"), state_path)
-```
-
-**NOTE**: It's best to avoid hard-coding secrets into your code—especially for a secrets manager. This leads us to a classic chicken-and-egg scenario. If you have experience with this, _vete con Dios_... Currently, I'm working on my personal workflow for this situation. My approach is to use an Ansible vault file to encrypt client settings (such as the access token, API URL, etc.) and rely on one of the following methods for decryption during automated workflows:
-
-1. A temporarily decrypted vault password file
-
-2. Logging into the Bitwarden CLI and programmatically pulling the vault password via a secure note (I know; a bit roundabout)
 
 <br>
 
