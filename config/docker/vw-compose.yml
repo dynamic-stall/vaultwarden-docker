@@ -92,8 +92,7 @@ services:
     restart: unless-stopped
 
   cli:
-    profiles:
-      - extras
+    profiles: [extras]
     image: bitwarden-cli:latest
     build:
       context: .
