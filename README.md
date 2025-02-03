@@ -169,26 +169,20 @@ DOMAIN_URL="https://${VAULT_NAME}.${DOMAIN_NAME}"
 2. Navigate to **Networks** → **Tunnels**
 
 3. Create a new tunnel:
-  a. Click _Create a tunnel_.
+  - Click _Create a tunnel_.
+  - Select _Cloudflared_ on the left.
+  - Name your tunnel (the name is only important to you). Click _Save_ on the bottom-right.
+  - Under the "Choose your environment" options, select _Docker_.
+  ![image](https://github.com/user-attachments/assets/28f33bd6-dfdf-48ea-bcf0-0393b9a49143)
 
-  b. Select _Cloudflared_ on the left.
-
-  c. Name your tunnel (the name is only important to you). Click _Save_ on the bottom-right.
-  
-  d. Under the "Choose your environment" options, select _Docker_.
-
-![image](https://github.com/user-attachments/assets/f241c4c6-57ea-45b1-aa2d-f8eb8d86b7c6)
-
-  e. Under "Install and run a connector", copy the `docker run` command provided. Paste this command in a secure note-taking environment to see the full **token**.
-
-  f. Copy this token and paste it into your `.env` file, updating the `TUNNEL_TOKEN` variable.
+  - Under "Install and run a connector", copy the `docker run` command provided. Paste this command in a secure note-taking environment to see the full **token**.
+  - Copy this token and paste it into your `.env` file, updating the `TUNNEL_TOKEN` variable.
   ```bash
   # Cloudflare Configuration
   TUNNEL_NAME="${VAULT_NAME}-tunnel"   # NOTE: this variable is for the Docker container name
   TUNNEL_TOKEN="<your-cloudflare-tunnel-token>"
   ```
-  
-  g. Back to your Cloudflare dashboard, click _Save_ on the bottom-right.
+  - Back to your Cloudflare dashboard, click _Save_ on the bottom-right.
 
 4. Configure the tunnel's _Public Hostname_:
    - **Subdomain:** Ensure this value matches your chosen `VAULT_NAME` value in your `.env` file
