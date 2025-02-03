@@ -188,7 +188,7 @@ DOMAIN_URL="https://${VAULT_NAME}.${DOMAIN_NAME}"
    - **Subdomain:** Ensure this value matches your chosen `VAULT_NAME` value in your `.env` file
    - **Domain:** Either your personal registered domain name (i.e., `example.com`) or your DuckDNS subdomain (i.e., `example.duckdns.org`)
    - **Path:** _(Leave this field blank)_
-   - **Type:**: HTTP
+   - **Type:** HTTP
    - **URL:** localhost:8443  (or your chosen `VAULT_PORT` value, if you changed it)
   
   * **NOTE:** If you are using a DuckDNS subdomain, you will not be able to add your subdomain to your Cloudflare dashboard for longer than 28 days (without _NS record_ verification, which isn't possible with DuckDNS). You can still enter a **"custom domain name"** in the _Public Hostname_ section. **Be sure to hit the _ENTER_ key when populating this value so it doesn't disappear**. A _warning_ for custom domains will appear. It means nothing configuration-wise, but be mindful:
