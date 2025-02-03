@@ -257,7 +257,7 @@ This will:
 
 ![image](https://github.com/user-attachments/assets/e1fdc52d-3eb4-4459-8629-8d010f399406)
 
-4. Use the initial admin credentials provided during setup
+4. Use your created user's **master password** to login
 
 <br>
 
