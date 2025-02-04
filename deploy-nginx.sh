@@ -106,16 +106,16 @@ setup_ssl() {
         echo -e "${YELLOW}Do you have existing SSL certificates? ([y]es/[n]o)${NC}"
         read -r existing_cert
         if [[ "$existing_cert" =~ ^(yes|y)$ ]]; then
-	    export EXISTING_CERT=true
+	        export EXISTING_CERT=true
             echo -e "${YELLOW}Enter the path to your certificate file:${NC}"
             read -r cert_file
-	    export CERTIFICATE="${cert_file}"
+	        export CERTIFICATE="${cert_file}"
             echo -e "${YELLOW}Enter the path to your private key file:${NC}"
             read -r pvt_key_file
-	    export PRIVATE_KEY="${pvt_key_file}"
+	        export PRIVATE_KEY="${pvt_key_file}"
         else
-	    export EXISTING_CERT=false
-	    mkdir $TMP
+	        export EXISTING_CERT=false
+	        mkdir $TMP
             ./scripts/ssl-cert-create.sh || error "Failed to create certificates"
         fi
     else
