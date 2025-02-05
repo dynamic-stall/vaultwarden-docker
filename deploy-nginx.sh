@@ -6,10 +6,13 @@
 
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[1;33m"
+PURPLE="\033[0;35m"
+CYAN="\033[1;36m"
+ORANGE="\033[38;5;202m"
+NC="\033[0m"
 
 ENV=".env"
 TMP="tmp"
@@ -32,6 +35,11 @@ success() {
 error() {
     echo -e "${RED}[ERROR] $1${NC}"
     exit 2
+}
+
+warning() {
+    echo -e "${ORANGE}[WARNING] $1${NC}"
+    sleep 1.5s
 }
 
 check_prerequisites() {
@@ -64,6 +72,9 @@ check_prerequisites() {
 	newgrp docker
     fi
 
+    # Set ID_GRP variable for docker-compose .env file
+    export ID_GRP=$(getent group docker | cut -d: -f3)
+
     # Check if /usr/bin/docker has correct group ownership
     current_group=$(stat -c '%G' /usr/bin/docker)
     if [ "$current_group" != "docker" ]; then
@@ -84,13 +95,23 @@ check_prerequisites() {
 }
 
 set_volume_directory() {
-    if [ ! -d /opt/vaultwarden ]; then    
-    	log "Creating necessary directories..."
-	sudo mkdir -p /opt/vaultwarden /opt/vaultwarden/backups /opt/vaultwarden/logs &> /dev/null
-    fi
-    # Set permissions
-    sudo chown -R root:docker /opt/vaultwarden
-    sudo chmod 750 /opt/vaultwarden
+    source "$ENV"
+
+    # Set permissions for volume directories
+    for volume in "$VAULT_VOLUME_DIR" "$VAULT_BACKUP_DIR" "$VAULT_LOG_DIR"; do
+        if [ ! -d "$volume" ]; then
+            mkdir -p "$volume"
+            echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] ${NC}Volume directory created: ${CYAN}$volume${NC}"
+            sleep 1s
+        else
+            echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] ${NC}Volume directory ${CYAN}$volume${NC} already exists..."
+            sleep 1s
+        fi
+
+        sudo chown -R root:docker "$volume"
+        sudo chmod -R 770 "$volume"
+        log "Permissions set for $volume"
+    done
 }
 
 generate_admin_token() {
@@ -120,7 +141,7 @@ setup_ssl() {
         fi
     else
         export ENABLE_SSL=false
-        log "SSL disabled. Skipping SSL setup."
+        log "SSL disabled. Skipping SSL setup..."
     fi
 }
 
@@ -129,7 +150,7 @@ configure_nginx() {
         log "Configuring Nginx..."
         ./scripts/nginx-config.sh || error "Failed to configure Nginx"
     else
-        log "SSL disabled. Skipping Nginx configuration."
+        log "SSL disabled. Skipping Nginx configuration..."
     fi
 }
 
