@@ -1,4 +1,4 @@
-# Vaultwarden Deployment with Cloudflare Tunnel
+# Vaultwarden Deployment with Cloudflare Tunnel, Docker Compose
 
 **BLUF**: This repository contains scripts and configurations for deploying a self-hosted Vaultwarden instance with Cloudflare Tunnel integration and (optional) DuckDNS custom subdomain via Docker Compose.
 
