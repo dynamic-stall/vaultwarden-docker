@@ -34,12 +34,13 @@ success() {
 
 error() {
     echo -e "${RED}[ERROR] $1${NC}"
-    exit 1
+    return 2
 }
 
 warning() {
     echo -e "${ORANGE}[WARNING] $1${NC}"
     sleep 1.5s
+    return 1
 }
 
 load_env() {
@@ -53,7 +54,7 @@ load_env() {
 
 build_cli_image() {
     log "Building Bitwarden CLI Docker image..."
-    if docker compose -f "$CONFIG/bw-compose.yml" --env-file "$ENV" build cli; then
+    if docker compose -f "$CONFIG/bw-compose.yml" --env-file "$ENV" --profile extras build cli; then
         success "Bitwarden CLI image build complete."
     else
         error "Failed to build Bitwarden CLI image."
@@ -73,18 +74,22 @@ main() {
             y|yes)
                 build_cli_image
                 echo -e "${YELLOW}You can now run CLI commands with:${NC}\n"
+                sleep 0.5s
                 echo -e "${PURPLE}docker compose -f $CONFIG/bw-compose.yml run --rm --profile extras cli bw${NC}"
-                sleep 1.25s
+                sleep 2s
                 echo -e "${YELLOW}\nTIP: Create a 'bw' alias pointing to 'bw-compose.yml' to quickly access the CLI, i.e.,${NC}\n"
+                sleep 0.5s
                 echo -e "${BLUE}alias ${CYAN}bw${NC}=${ORANGE}'docker compose -f $HOME/vaultwarden-docker/config/docker/bw-compose.yml run --rm --profile extras cli bw'${NC}\n"
-                sleep 1.25s
+                sleep 2s
                 return 0
                 ;;
             n|no)
                 log "Bitwarden CLI image will not be built."
                 prompt "If you prefer, you can install the CLI on your host following instructions at: https://bitwarden.com/help/cli"
-                echo "Skipping Bitwarden CLI configuration..."
-                exit 0
+                echo -e "${YELLOW}Alternatively, you can install the CLI using the ${CYAN}cli-config-host.sh${YELLOW} script within the scripts directory.${NC}"
+                sleep 1.25s
+                log "Skipping Bitwarden CLI configuration..."
+                return 0
                 ;;
             *)
                 warning "Invalid input. Please enter 'y', 'yes'; or 'n', 'no'."

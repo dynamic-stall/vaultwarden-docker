@@ -20,11 +20,12 @@ DOMAIN="$(grep -oP '^VAULT_NAME=\K.*' $ENV).$(grep -oP '^DOMAIN_NAME=\K.*' $ENV)
 
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+    sleep 1s
 }
 
 error() {
     echo -e "${RED}[ERROR] $1${NC}"
-    exit 1
+    exit 2
 }
 
 load_env() {
