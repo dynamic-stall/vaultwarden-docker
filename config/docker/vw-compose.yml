@@ -25,9 +25,9 @@ services:
     ports:
       - "${VAULT_PORT}:443"
     volumes:
-      - "${VAULT_VOLUME}:/data/"
-      - "${VAULT_VOLUME}/backups:/backups/"
-      - "${VAULT_VOLUME}/logs:/logs/"
+      - "${VAULT_VOLUME_DIR}:/data/"
+      - "${VAULT_BACKUP_DIR}:/backups/"
+      - "${VAULT_LOG_DIR}:/logs/"
     networks:
       vault_net:
         ipv4_address: 10.111.0.2
@@ -57,8 +57,8 @@ services:
       CRON_TIME: 0 5 * * *  # EVERY DAY @ 5am
       DELETE_AFTER: 7
       TIMESTAMP: true
-      UID: 0  # enter user that has docker permission (default: root)
-      GID: ${ID_GROUP}  # enter group ID for docker (default: docker)
+      UID: 0  # default: root
+      GID: ${ID_GROUP}  # default: docker
       BACKUP_ADD_DATABASE: true
       BACKUP_ADD_ATTACHMENTS: true
       BACKUP_ADD_CONFIG_JSON: true
