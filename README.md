@@ -156,8 +156,6 @@ DOMAIN_URL="https://${VAULT_NAME}.${DOMAIN_NAME}"
 
 4. In your DNS dashboard, you should see four records: two _A records_ (containing your current public IP address) and two _MX records_ (ignore these...).
 
-![image](https://github.com/user-attachments/assets/f62b8ece-ac8a-41f8-bfb2-353e498fb273)
-
 5. Save this page for later; we'll come back to it for the next step...
 
 <br>
