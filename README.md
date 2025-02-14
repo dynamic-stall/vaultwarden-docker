@@ -99,7 +99,7 @@ _(**NOTE II:** If skipping Nginx and SSL configuration, simply run the `deploy-s
 DDNS_DOMAIN=<your-chosen-subdomain>
 DDNS_TOKEN=<your-duckdns-token>
 ```
-* **NOTE** If you own `example.duckdns.org`, then set `DDNS_DOMAIN=example`.
+* **NOTE:** If you own `example.duckdns.org`, then set `DDNS_DOMAIN=example`.
 
 The DuckDNS container will automatically:
 - Update your IP address every 5 minutes
@@ -280,6 +280,8 @@ bw config server \
   --icons https://vault.example.com/icons \
   --notifications https://vault.example.com/notifications
 ```
+
+* **NOTE:** If all of your endpoints use the same domain name, you only need to run the `bw config server` command.
 
 <br>
 
