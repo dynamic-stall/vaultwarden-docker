@@ -110,36 +110,6 @@ check_prerequisites() {
 set_volume_directory() {
     source "$ENV"
 
-    if [ ! -d /opt/vaultwarden ]; then
-        log "Creating volume directories..."
-
-        # Create directories using environment variables
-        mkdir -p "$VAULT_VOLUME_DIR" &> /dev/null
-        mkdir -p "$VAULT_BACKUP_DIR" &> /dev/null
-        mkdir -p "$VAULT_LOG_DIR" &> /dev/null
-
-        log "Volume directories created:\n"
-        echo "Volume directory: $VAULT_VOLUME_DIR"
-        sleep 1.25s
-        echo "Back-up directory: $VAULT_BACKUP_DIR"
-        sleep 1.25s
-        echo "Log directory: $VAULT_LOG_DIR"
-        sleep 1.25s
-    else
-        log "Volume directories already exist."
-    fi
-
-    # Set permissions for volume directories
-    for volume in "$VAULT_VOLUME_DIR" "$VAULT_BACKUP_DIR"; do
-        sudo chown -R root:docker "$volume"
-        sudo chmod -R 770 "$volume"
-        log "Permissions set for $volume"
-    done
-}
-
-set_volume_directory() {
-    source "$ENV"
-
     # Set permissions for volume directories
     for volume in "$VAULT_VOLUME_DIR" "$VAULT_BACKUP_DIR" "$VAULT_LOG_DIR"; do
         if [ ! -d "$volume" ]; then
