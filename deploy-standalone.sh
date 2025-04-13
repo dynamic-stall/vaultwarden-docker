@@ -108,7 +108,7 @@ check_prerequisites() {
 }
 
 set_volume_directory() {
-    load_env
+    source "$ENV"
 
     if [ ! -d /opt/vaultwarden ]; then
         log "Creating volume directories..."
